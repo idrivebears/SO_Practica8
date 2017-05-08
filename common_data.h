@@ -1,3 +1,7 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+
 struct OPENFILES {
 	int inuse;		// 0 cerrado, 1 abierto
 	unsigned short inode;
@@ -7,9 +11,7 @@ struct OPENFILES {
 	unsigned short buffindirect[512]; //		
 };
 
-
 typedef int VDDIR;
-	
 
 struct vddirent 
 {
@@ -26,7 +28,7 @@ struct PARTITION {
 	char chs_end[3];
 	int lba;
 	int secs_partition;
-} 
+}; 
 
 // Lo que vamos a escribir en el primer sector del disco
 // Debe medir 512 bytes
@@ -34,7 +36,7 @@ struct MBR {
 	char bootstrap_code[446];
 	struct PARTITION partition[4];
 	short boot_signature;
-}
+};
 // printf("%d\n",sizeof(struct MBR));
 
 
@@ -82,3 +84,23 @@ struct DATE {
 	int min;
 	int sec;
 };
+
+
+int vdopen(char *filename,unsigned short mode);
+int vdcreat(char *filename,unsigned short perms);
+int vdunlink(char *filename);
+int vdseek(int fd, int offset, int whence);
+int vdwrite(int fd, char *buffer, int bytes);
+int isblockfree(int block);
+int nextfreeblock();
+int assignblock(int block);
+int unassignblock(int block);
+int writeblock(int block,char *buffer);
+int readblock(int block,char *buffer);
+unsigned short *postoptr(int fd,int pos);
+unsigned short *currpostoptr(int fd);
+VDDIR *vdopendir(char *path);
+struct vddirent *vdreaddir(VDDIR *dirdesc);
+int vdclosedir(VDDIR *dirdesc);
+int vdread(int fd, char *buffer, int bytes);
+int vdclose(int fd);
