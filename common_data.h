@@ -28,7 +28,7 @@ struct PARTITION {
 	char chs_end[3];
 	int lba;
 	int secs_partition;
-} 
+}; 
 
 // Lo que vamos a escribir en el primer sector del disco
 // Debe medir 512 bytes
@@ -36,7 +36,7 @@ struct MBR {
 	char bootstrap_code[446];
 	struct PARTITION partition[4];
 	short boot_signature;
-}
+};
 // printf("%d\n",sizeof(struct MBR));
 
 
