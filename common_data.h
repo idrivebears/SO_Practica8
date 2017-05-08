@@ -1,3 +1,24 @@
+struct OPENFILES {
+	int inuse;		// 0 cerrado, 1 abierto
+	unsigned short inode;
+	int currpos;
+	int currbloqueenmemoria;
+	char buffer[1024];
+	unsigned short buffindirect[512]; //		
+};
+
+
+typedef int VDDIR;
+	
+
+struct vddirent 
+{
+	char *d_name;
+};
+
+struct vddirent *vdreaddir(VDDIR *dirdesc);
+VDDIR *vdopendir(char *path);
+
 struct PARTITION {
 	char drive_status;
 	char chs_begin[3];
