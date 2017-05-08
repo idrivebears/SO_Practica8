@@ -1,3 +1,4 @@
+#include "common_data.h"
 //Funciones para el manejo de los nodos i, usan el mapa de bits del área de nodos i para determinar si un nodo i está libre, ocupado, y también hay funciones para asignar y liberar nodos i
 // *************************************************************************
 // Para el mapa de bits del área de nodos i
@@ -9,7 +10,7 @@ int isinodefree(int inode)
 	int offset=inode/8;
 	int shift=inode%8;
 	int result;
-
+	bool secboot_en_memoria = 0;
 	// Checar si el sector de boot de la partición está en memoria
 	if(!secboot_en_memoria)
 	{
@@ -296,7 +297,7 @@ int unassigninode(int inode)
 	return(1);
 }	
 
-/ ***********************************************************************************
+// ***********************************************************************************
 // Funciones para el manejo de inodos
 // ***********************************************************************************
 

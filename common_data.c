@@ -439,7 +439,7 @@ int readblock(int block,char *buffer)
 	return(1);	
 }
 
-/
+
 
 /* Esta función se utilizará con las funciones seek, write y read, con estas operaciones el nodo i 
 del archivo debe estar cargado en memoria RAM. Por ejemplo si escribimos información en el archivo 
