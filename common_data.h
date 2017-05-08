@@ -12,6 +12,7 @@ struct OPENFILES {
 };
 
 typedef int VDDIR;
+typedef int bool;
 
 struct vddirent 
 {
