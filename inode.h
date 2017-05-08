@@ -28,7 +28,7 @@ struct DATE {
 	int sec;
 };
 
-int isinodefree(int inode);common_data
+int isinodefree(int inode);
 int setninode(int num, char *filename,unsigned short atribs, int uid, int gid);
 int searchinode(char *filename);
 int removeinode(int numinode);
