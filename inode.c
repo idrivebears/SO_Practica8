@@ -1,4 +1,5 @@
 #include "common_data.h"
+#include "inode.h"
 //Funciones para el manejo de los nodos i, usan el mapa de bits del área de nodos i para determinar si un nodo i está libre, ocupado, y también hay funciones para asignar y liberar nodos i
 // *************************************************************************
 // Para el mapa de bits del área de nodos i
