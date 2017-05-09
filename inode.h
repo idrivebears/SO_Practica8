@@ -2,8 +2,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <string.h>
+#include "common_data.h"
+
 // Debe medir 64 bytes, importante es que el tamaño sea potencia de 2
-struct INODE {
+typedef struct  {
 	char name[18];
 	unsigned int datetimecreat;			// 32 bits
 	unsigned int datetimemodif;			// 32 bits
@@ -15,18 +18,18 @@ struct INODE {
 	unsigned short direct_blocks[10];	// 10 x 16 bits = 20 bytes
 	unsigned short indirect;			// 16 bits
 	unsigned short indirect2;			// 16 bits
-};
+} INODE;
 
 // printf("%d\n",sizeof(struct INODE));
 
-struct DATE {
+typedef struct {
 	int year;
 	int month;
 	int day;
 	int hour;
 	int min;
 	int sec;
-};
+} DATE;
 
 int isinodefree(int inode);
 int setninode(int num, char *filename,unsigned short atribs, int uid, int gid);

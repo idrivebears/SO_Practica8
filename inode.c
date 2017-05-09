@@ -1,17 +1,27 @@
 #include "common_data.h"
 #include "inode.h"
+
 //Funciones para el manejo de los nodos i, usan el mapa de bits del área de nodos i para determinar si un nodo i está libre, ocupado, y también hay funciones para asignar y liberar nodos i
 // *************************************************************************
 // Para el mapa de bits del área de nodos i
 // *************************************************************************
 
 // Usando el mapa de bits, determinar si un nodo i, está libre u ocupado.
+
+int TOTAL_NODOS_I = 10; ///checar
+
 int isinodefree(int inode)
 {
 	int offset=inode/8;
 	int shift=inode%8;
 	int result;
-	int secboot_en_memoria = 0;
+
+	int inodesmap_en_memoria = 0; 		///checar
+	int secboot_en_memoria = 0;			///checar
+	unsigned short mapa_bits_nodos_i; 	///checar
+	SECBOOTPART secboot; 		  		///checar
+	INODE *inodesmap;					///checar
+
 	// Checar si el sector de boot de la partición está en memoria
 	if(!secboot_en_memoria)
 	{
@@ -44,6 +54,11 @@ int setninode(int num, char *filename,unsigned short atribs, int uid, int gid)
 	int i;
 
 	int result;
+
+	int nodos_i_en_memoria = 0;	///checar
+	int inicio_nodos_i = 0;		///checar
+	INODE *inode;				///checar
+	SECBOOTPART secboot;		///checar
 
 	//Antes de continuar debe cargarse en memoria el sector lógico 1 que es el sector de boot de la partición.
 	//Con los datos que están ahí, calcular:
@@ -80,7 +95,7 @@ int setninode(int num, char *filename,unsigned short atribs, int uid, int gid)
 	
 	// Establecer los apuntadores a bloques directos en 0
 	for(i=0;i<10;i++)
-		inode[num].blocks[i]=0;
+		inode[num].direct_blocks[i]=0;			///checar cambio blocks -> direct_blocks
 
 	// Establecer los apuntadores indirectos en 0
 	inode[num].indirect=0;
@@ -106,6 +121,10 @@ int searchinode(char *filename)
 	int free;
 	int result;
 
+	int nodos_i_en_memoria = 0;	///checar
+	int inicio_nodos_i = 0;		///checar
+	INODE *inode;				///checar
+	SECBOOTPART secboot;		///checar
 	//Antes de continuar debe cargarse en memoria el sector lógico 1 que es el sector de boot de la partición.
 
 	//Con los datos que están ahí, calcular:
@@ -144,6 +163,7 @@ int removeinode(int numinode)
 	int i;
 
 	unsigned short temp[512]; // 1024 bytes
+	INODE *inode;
 // Desasignar los bloques directos en el mapa de bits que 
 // corresponden al archivo
 
@@ -157,11 +177,11 @@ int removeinode(int numinode)
 
 // Recorrer los apuntadores directos del nodo i
 	for(i=0;i<10;i++)
-		if(inode[numinode].blocks[i]!=0) // Si es dif de cero
+		if(inode[numinode].direct_blocks[i]!=0) // Si es dif de cero
 										// Si está asignado
 		{
-			unassignblock(inode[numinode].blocks[i]);
-			inode[numinode].blocks[i]=0;
+			unassignblock(inode[numinode].direct_blocks[i]);
+			inode[numinode].direct_blocks[i]=0;					///checar blocks -> direct_blocks //all three
 		}
 
 	// Si el bloque indirecto, ya está asignado
@@ -190,6 +210,11 @@ int nextfreeinode()
 {
 	int i,j;
 	int result;
+	int inodesmap_en_memoria = 0; 		///checar
+	int secboot_en_memoria = 0;			///checar
+	unsigned short mapa_bits_nodos_i; 	///checar
+	SECBOOTPART secboot; 		  		///checar
+	INODE *inodesmap;					///checar
 
 	// Checar si el sector de boot de la partición está en memoria
 	if(!secboot_en_memoria)
@@ -239,6 +264,11 @@ int assigninode(int inode)
 	int offset=inode/8;
 	int shift=inode%8;
 	int result;
+	int inodesmap_en_memoria = 0; 		///checar
+	int secboot_en_memoria = 0;			///checar
+	unsigned short mapa_bits_nodos_i; 	///checar
+	SECBOOTPART secboot; 		  		///checar
+	INODE *inodesmap;					///checar
 
 	// Checar si el sector de boot de la partición está en memoria
 	if(!secboot_en_memoria)
@@ -271,7 +301,12 @@ int unassigninode(int inode)
 	int offset=inode/8;
 	int shift=inode%8;
 	int result;
-
+	int inodesmap_en_memoria = 0; 		///checar
+	int secboot_en_memoria = 0;			///checar
+	unsigned short mapa_bits_nodos_i; 	///checar
+	SECBOOTPART secboot; 		  		///checar
+	INODE *inodesmap;					///checar
+	
 	// Checar si el sector de boot de la partición está en memoria
 	if(!secboot_en_memoria)
 	{
@@ -297,6 +332,7 @@ int unassigninode(int inode)
 	vdwriteseclog(mapa_bits_nodos_i,inodesmap);
 	return(1);
 }	
+
 
 // ***********************************************************************************
 // Funciones para el manejo de inodos
