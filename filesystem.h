@@ -122,5 +122,5 @@ int vdread(int fd, char *buffer, int bytes);
 int vdclose(int fd);
 
 
-int vdwriteseclog(int drive, int seclog, char *buffer);
-int vdreadseclog(int drive, int seclog, char *buffer);
+int vdwriteseclog(int seclog, char *buffer);
+int vdreadseclog(int seclog, char *buffer);
