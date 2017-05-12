@@ -2,12 +2,16 @@
 
 //Funciones del Sistema de Archivos
 int openfiles_inicializada = 0;
+<<<<<<< HEAD
+Openfiles openfiles[24];
+=======
 OPENFILES openfiles[24];
 Inode inode[24];					 ///checar
 SecBootPart secboot; 				 ///checar
 int secboot_en_memoria = 1;		     ///checar	
 char mapa_bits_nodos_i[3] = {0,0,0}; ///checar
 
+>>>>>>> d0c04a5bc1eb1c89374388101c89c63e817b505c
 int vdopen(char *filename,unsigned short mode)
 {
 	// Les toca hacerla a ustedes
@@ -940,7 +944,7 @@ int unassigninode(int inode)
 
 
 
-unsigned int datetoint(struct DATE date)
+unsigned int datetoint(struct Date date)
 {
 	unsigned int val=0;
 
@@ -959,7 +963,7 @@ unsigned int datetoint(struct DATE date)
 	return(val);
 }
 
-int inttodate(struct DATE *date,unsigned int val)
+int inttodate(struct Date *date,unsigned int val)
 {
 	date->sec=val&0x3F;
 	val>>=6;
@@ -981,7 +985,7 @@ unsigned int currdatetimetoint()
 	struct tm *tm_ptr;
 	time_t the_time;
 	
-	struct DATE now;
+	struct Date now;
 
 	(void) time(&the_time);
 	tm_ptr=gmtime(&the_time);
