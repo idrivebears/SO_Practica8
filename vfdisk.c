@@ -21,7 +21,7 @@ int vdwriteseclog(int seclog, char *buffer)
 }
 
 int vdreadseclog(int seclog, char *buffer)
-{
+{tiene 
 	int head, sector, cylinder;
 	sector = (seclog % SECTORS) + 1;
 	head = (seclog / SECTORS) % HEADS;
