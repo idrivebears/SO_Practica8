@@ -4,15 +4,6 @@
 #include <time.h>
 #include <string.h>
 
-<<<<<<< HEAD
-#define TOTAL_NODOS_I 24   			 ///checar
-Inode inode[24];					 ///checar
-SecBootPart secboot; 				 ///checar
-int secboot_en_memoria = 1;		     ///checar	
-char mapa_bits_nodos_i[3] = {0,0,0}; ///checar
-
-=======
->>>>>>> d0c04a5bc1eb1c89374388101c89c63e817b505c
 typedef struct  {
 	int inuse;		// 0 cerrado, 1 abierto
 	unsigned short inode;
@@ -104,13 +95,9 @@ int removeinode(int numinode);
 int nextfreeinode();
 int assigninode(int inode);
 int unassigninode(int inode);
-<<<<<<< HEAD
-unsigned int datetoint(struct Date date);
-int inttodate(struct Date *date,unsigned int val);
-=======
+
 unsigned int datetoint(Date date);
 int inttodate(Date *date,unsigned int val);
->>>>>>> d0c04a5bc1eb1c89374388101c89c63e817b505c
 unsigned int currdatetimetoint();
 
 
