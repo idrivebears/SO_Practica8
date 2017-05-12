@@ -8,7 +8,11 @@
 
 // Usando el mapa de bits, determinar si un nodo i, está libre u ocupado.
 
-int TOTAL_NODOS_I = 10; ///checar
+#define TOTAL_NODOS_I 24   			 ///checar
+INODE inode[24];					 ///checar
+SECBOOTPART secboot; 				 ///checar
+int secboot_en_memoria = 1;		     ///checar	
+char mapa_bits_nodos_i[3] = {0,0,0}; ///checar
 
 int isinodefree(int inode)
 {
@@ -17,10 +21,8 @@ int isinodefree(int inode)
 	int result;
 
 	int inodesmap_en_memoria = 0; 		///checar
-	int secboot_en_memoria = 0;			///checar
-	unsigned short mapa_bits_nodos_i; 	///checar
-	SECBOOTPART secboot; 		  		///checar
-	INODE *inodesmap;					///checar
+	unsigned short inicio_nodos_i;		///checar
+
 
 	// Checar si el sector de boot de la partición está en memoria
 	if(!secboot_en_memoria)
@@ -29,7 +31,7 @@ int isinodefree(int inode)
 		result=vdreadseclog(1,(char *) &secboot);
 		secboot_en_memoria=1;
 	}
-	mapa_bits_nodos_i= secboot.sec_inicpart +secboot.sec_res; 	
+	inicio_nodos_i = secboot.sec_inicpart +secboot.sec_res; 	
 //Usamos la información del sector de boot de la partición para 
 						//determinar en que sector inicia el 
 						// mapa de bits de nodos i 
@@ -38,12 +40,12 @@ int isinodefree(int inode)
 	if(!inodesmap_en_memoria)
 	{
 		// Si no está en memoria, hay que leerlo del disco
-		result=vdreadseclog(mapa_bits_nodos_i,inodesmap);
+		result=vdreadseclog(mapa_bits_nodos_i,&inode);		///checar
 		inodesmap_en_memoria=1;
 	}
 
 
-	if(inodesmap[offset] & (1<<shift))
+	if(mapa_bits_nodos_i[offset] & (1<<shift))
 		return(0); // El nodo i ya está ocupado
 	else
 		return(1); // El nodo i está libre
@@ -55,10 +57,9 @@ int setninode(int num, char *filename,unsigned short atribs, int uid, int gid)
 
 	int result;
 
-	int nodos_i_en_memoria = 0;	///checar
-	int inicio_nodos_i = 0;		///checar
-	INODE *inode;				///checar
-	SECBOOTPART secboot;		///checar
+	int nodos_i_en_memoria = 0;									///checar
+	int inicio_nodos_i = 0;										///checar
+	inicio_nodos_i = secboot.sec_inicpart +secboot.sec_res; 	///checar
 
 	//Antes de continuar debe cargarse en memoria el sector lógico 1 que es el sector de boot de la partición.
 	//Con los datos que están ahí, calcular:
@@ -123,8 +124,7 @@ int searchinode(char *filename)
 
 	int nodos_i_en_memoria = 0;	///checar
 	int inicio_nodos_i = 0;		///checar
-	INODE *inode;				///checar
-	SECBOOTPART secboot;		///checar
+	inicio_nodos_i = secboot.sec_inicpart +secboot.sec_res; 	///checar
 	//Antes de continuar debe cargarse en memoria el sector lógico 1 que es el sector de boot de la partición.
 
 	//Con los datos que están ahí, calcular:
@@ -163,7 +163,6 @@ int removeinode(int numinode)
 	int i;
 
 	unsigned short temp[512]; // 1024 bytes
-	INODE *inode;
 // Desasignar los bloques directos en el mapa de bits que 
 // corresponden al archivo
 
@@ -211,11 +210,8 @@ int nextfreeinode()
 	int i,j;
 	int result;
 	int inodesmap_en_memoria = 0; 		///checar
-	int secboot_en_memoria = 0;			///checar
-	unsigned short mapa_bits_nodos_i; 	///checar
-	SECBOOTPART secboot; 		  		///checar
-	INODE *inodesmap;					///checar
 
+	unsigned short inicio_nodos_i;		///checar
 	// Checar si el sector de boot de la partición está en memoria
 	if(!secboot_en_memoria)
 	{
@@ -223,7 +219,7 @@ int nextfreeinode()
 		result=vdreadseclog(1,(char *) &secboot);
 		secboot_en_memoria=1;
 	}
-	mapa_bits_nodos_i= secboot.sec_inicpart +secboot.sec_res; 	
+	inicio_nodos_i = secboot.sec_inicpart +secboot.sec_res; 	///checar
 //Usamos la información del sector de boot de la partición para 
 						//determinar en que sector inicia el 
 						// mapa de bits de nodos i 
@@ -232,13 +228,13 @@ int nextfreeinode()
 	if(!inodesmap_en_memoria)
 	{
 		// Si no está en memoria, hay que leerlo del disco
-		result=vdreadseclog(mapa_bits_nodos_i,inodesmap);
+		result=vdreadseclog(inicio_nodos_i, mapa_bits_nodos_i);
 		inodesmap_en_memoria=1;
 	}
 
 	// Recorrer byte por byte mientras sea 0xFF sigo recorriendo
 	i=0;
-	while(inodesmap[i]==0xFF && i<3)
+	while(mapa_bits_nodos_i[i]==0xFF && i<3)
 		i++;
 
 	if(i<3)
@@ -246,7 +242,7 @@ int nextfreeinode()
 		// Recorrer los bits del byte, para encontrar el bit
 		// que está en cero
 		j=0;
-		while(inodesmap[i] & (1<<j) && j<8)
+		while(mapa_bits_nodos_i[i] & (1<<j) && j<8)
 			j++;
 
 		return(i*8+j); // Regresar el bit del mapa encontrado en cero
@@ -264,11 +260,9 @@ int assigninode(int inode)
 	int offset=inode/8;
 	int shift=inode%8;
 	int result;
+
 	int inodesmap_en_memoria = 0; 		///checar
-	int secboot_en_memoria = 0;			///checar
-	unsigned short mapa_bits_nodos_i; 	///checar
-	SECBOOTPART secboot; 		  		///checar
-	INODE *inodesmap;					///checar
+	unsigned short inicio_nodos_i;		///checar
 
 	// Checar si el sector de boot de la partición está en memoria
 	if(!secboot_en_memoria)
@@ -277,7 +271,7 @@ int assigninode(int inode)
 		result=vdreadseclog(1,(char *) &secboot);
 		secboot_en_memoria=1;
 	}
-	mapa_bits_nodos_i= secboot.sec_inicpart +secboot.sec_res; 	
+	inicio_nodos_i= secboot.sec_inicpart +secboot.sec_res; 	
 		//Usamos la información del sector de boot de la partición para 
 		//determinar en que sector inicia el 
 		// mapa de bits de nodos i 
@@ -286,12 +280,12 @@ int assigninode(int inode)
 	if(!inodesmap_en_memoria)
 	{
 		// Si no está en memoria, hay que leerlo del disco
-		result=vdreadseclog(mapa_bits_nodos_i,inodesmap);
+		result=vdreadseclog(inicio_nodos_i,&inode);
 		inodesmap_en_memoria=1;
 	}
 
-	inodesmap[offset]|=(1<<shift); // Poner en 1 el bit indicado
-	vdwriteseclog(mapa_bits_nodos_i,inodesmap);
+	mapa_bits_nodos_i[offset]|=(1<<shift); // Poner en 1 el bit indicado
+	vdwriteseclog(inicio_nodos_i,&inode);
 	return(1);
 }
 
@@ -302,10 +296,7 @@ int unassigninode(int inode)
 	int shift=inode%8;
 	int result;
 	int inodesmap_en_memoria = 0; 		///checar
-	int secboot_en_memoria = 0;			///checar
-	unsigned short mapa_bits_nodos_i; 	///checar
-	SECBOOTPART secboot; 		  		///checar
-	INODE *inodesmap;					///checar
+	unsigned short inicio_nodos_i;		///checar
 	
 	// Checar si el sector de boot de la partición está en memoria
 	if(!secboot_en_memoria)
@@ -314,7 +305,7 @@ int unassigninode(int inode)
 		result=vdreadseclog(1,(char *) &secboot);
 		secboot_en_memoria=1;
 	}
-	mapa_bits_nodos_i= secboot.sec_inicpart +secboot.sec_res; 	
+	inicio_nodos_i= secboot.sec_inicpart +secboot.sec_res; 	
 		//Usamos la información del sector de boot de la partición para 
 		//determinar en que sector inicia el 
 		// mapa de bits de nodos i 	
@@ -323,13 +314,13 @@ int unassigninode(int inode)
 	if(!inodesmap_en_memoria)
 	{
 		// Si no está en memoria, hay que leerlo del disco
-		result=vdreadseclog(mapa_bits_nodos_i,inodesmap);
+		result=vdreadseclog(inicio_nodos_i,&inode);	////checar
 		inodesmap_en_memoria=1;
 	}
 
 
-	inodesmap[offset]&=(char) ~(1<<shift); // Poner en cero el bit que corresponde al inodo indicado
-	vdwriteseclog(mapa_bits_nodos_i,inodesmap);
+	mapa_bits_nodos_i[offset]&=(char) ~(1<<shift); // Poner en cero el bit que corresponde al inodo indicado
+	vdwriteseclog(inicio_nodos_i,inode);
 	return(1);
 }	
 
