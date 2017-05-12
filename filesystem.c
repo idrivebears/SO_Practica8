@@ -1056,6 +1056,7 @@ unsigned int currdatetimetoint()
 
 	return(datetoint(now));
 }
+
 void writeInode(Inode inode[TOTAL_NODOS_I]){
 	unsigned short inicio_nodos_i;
 	char *buffer = malloc ((int)sizeof(SecBootPart));
@@ -1085,15 +1086,18 @@ void writeBlockMap(){
 		vdwriteseclog(inicio_nodos_i,buffer);	////checar		
 	}
 }
-/*
-int vdwriteseclog(int drive, int seclog, char *buffer)
+
+
+
+
+int vdwriteseclog(int seclog, char *buffer)
 {
 	int head, sector, cylinder;
 	sector = (seclog % SECTORS) + 1;
 	head = (seclog / SECTORS) % HEADS;
 	cylinder = seclog / (SECTORS * HEADS);
 
-	return vdwritesector(drive, head, cylinder, sector, 1, buffer);
+	return vdwritesector(0, head, cylinder, sector, 1, buffer);
 }
 
 int vdreadseclog(int seclog, char *buffer)
@@ -1103,6 +1107,5 @@ int vdreadseclog(int seclog, char *buffer)
 	head = (seclog / SECTORS) % HEADS;
 	cylinder = seclog / (SECTORS * HEADS);
 
-	return vdreadseclog(drive, head, cylinder, sector, 1, buffer);
-
-}*/
+	return vdreadsector(0, head, cylinder, sector, 1, buffer);
+}
