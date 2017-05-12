@@ -5,7 +5,8 @@ int openfiles_inicializada = 0;
 Openfiles openfiles[24];
 Inode inode[24];					 ///checar
 SecBootPart secboot; 				 ///checar
-int secboot_en_memoria = 1;		     ///checar	
+int secboot_en_memoria = 0;		     ///checar	
+int inodesmap_en_memoria = 0; 		 ///checar
 char mapa_bits_nodos_i[3] = {0,0,0}; ///checar
 
 int vdopen(char *filename,unsigned short mode)
@@ -629,7 +630,6 @@ int isinodefree(int inode)
 	int shift=inode%8;
 	int result;
 
-	int inodesmap_en_memoria = 0; 		///checar
 	unsigned short inicio_nodos_i;		///checar
 
 
@@ -818,7 +818,6 @@ int nextfreeinode()
 {
 	int i,j;
 	int result;
-	int inodesmap_en_memoria = 0; 		///checar
 
 	unsigned short inicio_nodos_i;		///checar
 	// Checar si el sector de boot de la partición está en memoria
@@ -870,7 +869,6 @@ int assigninode(int inode)
 	int shift=inode%8;
 	int result;
 
-	int inodesmap_en_memoria = 0; 		///checar
 	unsigned short inicio_nodos_i;		///checar
 
 	// Checar si el sector de boot de la partición está en memoria
@@ -904,7 +902,7 @@ int unassigninode(int inode)
 	int offset=inode/8;
 	int shift=inode%8;
 	int result;
-	int inodesmap_en_memoria = 0; 		///checar
+	
 	unsigned short inicio_nodos_i;		///checar
 	
 	// Checar si el sector de boot de la partición está en memoria
