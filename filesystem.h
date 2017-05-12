@@ -99,7 +99,9 @@ int unassigninode(int inode);
 unsigned int datetoint(Date date);
 int inttodate(Date *date,unsigned int val);
 unsigned int currdatetimetoint();
-
+void writeInode(Inode inode[TOTAL_NODOS_I]);
+void readBlockMap();
+void writeBlockMap();
 
 int vdopen(char *filename,unsigned short mode);
 int vdcreat(char *filename,unsigned short perms);

@@ -6,10 +6,11 @@ OpenFile openfiles[24];
 Inode inode[24];					 ///checar
 SecBootPart secboot; 				 ///checar
 int secboot_en_memoria = 0;		     ///checar	
-char mapa_bits_nodos_i[3] = {0,0,0}; ///checar
-char mapa_bits_bloques[secboot.sec_mapa_bits_bloques*512]; ///6 *512 *8 = 24576
+char mapa_bits_nodos_i[3]; ///checar
+char mapa_bits_bloques[6*512]; ///6 *512 *8 = 24576
 int blocksmap_en_memoria = 0;
-int nodos_i_en_memoria   = 0;			 ///checar
+int inodesmap_en_memoria   = 0;			 ///checar
+char *blockBuffer[1024];
 
 int vdopen(char *filename,unsigned short mode)
 {
@@ -196,8 +197,7 @@ int vdwrite(int fd, char *buffer, int bytes)
 			
 			// Escribir el sector de la tabla de nodos i
 			// En el disco
-			sector=(currinode/4)*4;
-			result=vdwriteseclog(inicio_nodos_i+sector,&inode[sector*8]);
+			writeInode(inode);
 		}
 
 		// Si el bloque de la posición actual no está en memoria
@@ -250,7 +250,10 @@ int isblockfree(int block)
 	// Determinar si tenemos el sector de boot de la partición en memoria
 	if(!secboot_en_memoria)
 	{
-		result=vdreadseclog(1, (char *) &secboot);
+		// Si no está en memoria, cárgalo
+		char * buffer = malloc((int)sizeof(SecBootPart));
+		result=vdreadseclog(1,(char *) buffer);
+		memcpy(&secboot, buffer, (int) sizeof(SecBootPart));
 		secboot_en_memoria=1;
 	}
 
@@ -262,12 +265,11 @@ int isblockfree(int block)
 	{
 		// Cargar todos los sectores que corresponden al 
 		// mapa de bits
-		for(i=0;i<secboot.sec_mapa_bits_bloques;i++)
-			result=vdreadseclog(inicio_area_datos+i,blocksmap+i*512);
+		readBlockMap();
 		blocksmap_en_memoria=1;
 	}
 
-	if(blocksmap[offset] & (1<<shift))
+	if(mapa_bits_bloques[offset] & (1<<shift))
 		return(0);	// Si el bit está en 1, regresar 0 (no está libre)
 	else
 		return(1);	// Si el bit está en 0, regresar 1 (si está libre)
@@ -283,7 +285,10 @@ int nextfreeblock()
 	// Determinar si tenemos el sector de boot de la partición en memoria
 	if(!secboot_en_memoria)
 	{
-		result=vdreadseclog(1, (char *) &secboot);
+		// Si no está en memoria, cárgalo
+		char * buffer = malloc((int)sizeof(SecBootPart));
+		result=vdreadseclog(1,(char *) buffer);
+		memcpy(&secboot, buffer, (int) sizeof(SecBootPart));
 		secboot_en_memoria=1;
 	}
 
@@ -295,19 +300,18 @@ int nextfreeblock()
 	{
 		// Cargar todos los sectores que corresponden al 
 		// mapa de bits
-		for(i=0;i<secboot.sec_mapa_bits_bloques;i++)
-			result=vdreadseclog(inicio_area_datos+i,blocksmap+i*512);
+		readBlockMap();
 		blocksmap_en_memoria=1;
 	}
 
 	i=0;
-	while(blocksmap[i]==0xFF && i<secboot.sec_mapa_bits_bloques*512)
+	while(mapa_bits_bloques[i]==0xFF && i<secboot.sec_mapa_bits_bloques*512)
 		i++;
 
 	if(i<secboot.sec_mapa_bits_bloques*512)
 	{
 		j=0;
-		while(blocksmap[i] & (1<<j) && j<8)
+		while(mapa_bits_bloques[i] & (1<<j) && j<8)
 			j++;
 
 		return(i*8+j);
@@ -330,7 +334,10 @@ int assignblock(int block)
 	// Determinar si tenemos el sector de boot de la partición en memoria
 	if(!secboot_en_memoria)
 	{
-		result=vdreadseclog(1, (char *) &secboot);
+		// Si no está en memoria, cárgalo
+		char * buffer = malloc((int)sizeof(SecBootPart));
+		result=vdreadseclog(1,(char *) buffer);
+		memcpy(&secboot, buffer, (int) sizeof(SecBootPart));
 		secboot_en_memoria=1;
 	}
 
@@ -342,15 +349,14 @@ int assignblock(int block)
 	{
 		// Cargar todos los sectores que corresponden al 
 		// mapa de bits
-		for(i=0;i<secboot.sec_mapa_bits_bloques;i++)
-			result=vdreadseclog(inicio_area_datos+i,blocksmap+i*512);
+		readBlockMap();
 		blocksmap_en_memoria=1;
 	}
 
-	blocksmap[offset]|=(1<<shift);
+	mapa_bits_bloques[offset]|=(1<<shift);
 
 	sector=(offset/512)*512;
-	vdwriteseclog(inicio_area_datos+sector,blocksmap+sector*512);
+	writeBlockMap();
 	//for(i=0;i<secboot.sec_mapa_bits_bloques;i++)
 	//	vdwriteseclog(mapa_bits_bloques+i,blocksmap+i*512);
 	return(1);
@@ -370,10 +376,12 @@ int unassignblock(int block)
 	// Determinar si tenemos el sector de boot de la partición en memoria
 	if(!secboot_en_memoria)
 	{
-		result=vdreadseclog(1, (char *) &secboot);
+		// Si no está en memoria, cárgalo
+		char * buffer = malloc((int)sizeof(SecBootPart));
+		result=vdreadseclog(1,(char *) buffer);
+		memcpy(&secboot, buffer, (int) sizeof(SecBootPart));
 		secboot_en_memoria=1;
 	}
-
 	// Calcular el sector lógico donde está el mapa de bits de los bloques
 	inicio_area_datos = secboot.sec_inicpart+secboot.sec_res+secboot.sec_mapa_bits_area_nodos_i;
 	
@@ -382,15 +390,14 @@ int unassignblock(int block)
 	{
 		// Cargar todos los sectores que corresponden al 
 		// mapa de bits
-		for(i=0;i<secboot.sec_mapa_bits_bloques;i++)
-			result=vdreadseclog(inicio_area_datos+i,blocksmap+i*512);
+		readBlockMap();
 		blocksmap_en_memoria=1;
 	}
 
-	blocksmap[offset]&=(char) ~(1<<shift);
+	mapa_bits_bloques[offset]&=(char) ~(1<<shift);
 
 	sector=(offset/512)*512;
-	vdwriteseclog(inicio_area_datos+sector,blocksmap+sector*512);
+	writeBlockMap();
 	// for(i=0;i<secboot.sec_mapa_bits_bloques;i++)
 	//	vdwriteseclog(mapa_bits_bloques+i,blocksmap+i*512);
 	return(1);
@@ -410,9 +417,10 @@ int writeblock(int block,char *buffer)
 	// Determinar si el sector de boot de la partición está en memoria, si no está en memoria, cargarlo
 	if(!secboot_en_memoria)
 	{
-		// Leer el sector lógico 1, donde está
-		// el sector de boot de la partición
-		result=vdreadseclog(1,(char *) &secboot);
+		// Si no está en memoria, cárgalo
+		char * buffer = malloc((int)sizeof(SecBootPart));
+		result=vdreadseclog(1,(char *) buffer);
+		memcpy(&secboot, buffer, (int) sizeof(SecBootPart));
 		secboot_en_memoria=1;
 	}
 
@@ -426,7 +434,7 @@ int writeblock(int block,char *buffer)
 	// Escribir todos los sectores que corresponden al 
 	// bloque
 	for(i=0;i<secboot.sec_x_bloque;i++)
-		vdwriteseclog(inicio_area_datos+(block-1)*secboot.sec_x_bloque+i,buffer+512*i);
+		vdwriteseclog(inicio_area_datos+(block-1)*secboot.sec_x_bloque+i,blockBuffer+512*i);
 	return(1);	
 }
 
@@ -438,9 +446,10 @@ int readblock(int block,char *buffer)
 	// Determinar si el sector de boot de la partición está en memoria, si no está en memoria, cargarlo
 	if(!secboot_en_memoria)
 	{
-		// Leer el sector lógico 1, donde está
-		// el sector de boot de la partición
-		result=vdreadseclog(1,(char *) &secboot);
+		// Si no está en memoria, cárgalo
+		char * buffer = malloc((int)sizeof(SecBootPart));
+		result=vdreadseclog(1,(char *) buffer);
+		memcpy(&secboot, buffer, (int) sizeof(SecBootPart));
 		secboot_en_memoria=1;
 	}
 
@@ -452,7 +461,7 @@ int readblock(int block,char *buffer)
 	inicio_area_datos=secboot.sec_inicpart+secboot.sec_res+secboot.sec_mapa_bits_area_nodos_i +secboot.sec_mapa_bits_bloques+secboot.sec_tabla_nodos_i;
 
 	for(i=0;i<secboot.sec_x_bloque;i++)
-		vdreadseclog(inicio_area_datos+(block-1)*secboot.sec_x_bloque+i,buffer+512*i);
+		vdreadseclog(inicio_area_datos+(block-1)*secboot.sec_x_bloque+i,blockBuffer+512*i);
 	return(1);	
 }
 
@@ -508,7 +517,7 @@ unsigned short *currpostoptr(int fd)
 //Funciones para el manejo de directores (sólo directorio ráiz)
 
 VDDIR dirs[2]={-1,-1};
-struct vddirent current;
+//struct vddirent current;
 
 
 VDDIR *vdopendir(char *path)
@@ -521,7 +530,10 @@ VDDIR *vdopendir(char *path)
 
 	if(!secboot_en_memoria)
 	{
-		result=vdreadseclog(0,(char *) &secboot);
+		// Si no está en memoria, cárgalo
+		char * buffer = malloc((int)sizeof(SecBootPart));
+		result=vdreadseclog(1,(char *) buffer);
+		memcpy(&secboot, buffer, (int) sizeof(SecBootPart));
 		secboot_en_memoria=1;
 	}
 
@@ -529,13 +541,17 @@ VDDIR *vdopendir(char *path)
 
 	// Determinar si la tabla de nodos i está en memoria
 // si no está en memoria, hay que cargarlos
-	if(!nodos_i_en_memoria)
+	if(!inodesmap_en_memoria)
 	{
-		for(i=0;i<secboot.sec_tabla_nodos_i;i++)
-			result=vdreadseclog(inicio_nodos_i+i,&inode[i*8]);
-
-		nodos_i_en_memoria=1;
+		// Si no está en memoria, hay que leerlo del disco
+		char *buffer = malloc ((int)sizeof(SecBootPart));
+		for(i = 0; i < secboot.sec_tabla_nodos_i; i ++){
+				result=vdreadseclog(inicio_nodos_i+i,buffer);	////checar
+				memcpy(&inode[i*8], buffer, (int) sizeof(SecBootPart));
+		}
+		inodesmap_en_memoria=1;
 	}
+
 
 	if(strcmp(path,".")!=0)
 		return(NULL);
@@ -564,13 +580,17 @@ struct vddirent *vdreaddir(VDDIR *dirdesc)
 	vddirent current;					///new
 	inicio_nodos_i = secboot.sec_inicpart +secboot.sec_res; 
 
-	if(!nodos_i_en_memoria)
+	if(!inodesmap_en_memoria)
 	{
-		for(i=0;i<secboot.sec_tabla_nodos_i;i++)
-			result=vdreadseclog(inicio_nodos_i+i,&inode[i*8]);
-
-		nodos_i_en_memoria=1;
+		// Si no está en memoria, hay que leerlo del disco
+		char *buffer = malloc ((int)sizeof(SecBootPart));
+		for(i = 0; i < secboot.sec_tabla_nodos_i; i ++){
+				result=vdreadseclog(inicio_nodos_i+i,buffer);	////checar
+				memcpy(&inode[i*8], buffer, (int) sizeof(SecBootPart));
+		}
+		inodesmap_en_memoria=1;
 	}
+
 
 	// Mientras no haya nodo i, avanza
 	while(isinodefree(*dirdesc) && *dirdesc<4096)
@@ -641,13 +661,12 @@ int readblock(int num_block,char *buffer)
 //**********************************************************************
 // INODES funcs
 //**********************************************************************
-int isinodefree(int inode)
+int isinodefree(int inum)
 {
-	int offset=inode/8;
-	int shift=inode%8;
-	int result;
+	int offset=inum/8;
+	int shift=inum%8;
+	int result, i;
 
-	int inodesmap_en_memoria = 0; 		///checar
 	unsigned short inicio_nodos_i;		///checar
 	inicio_nodos_i = secboot.sec_inicpart +secboot.sec_res; 
 
@@ -655,7 +674,9 @@ int isinodefree(int inode)
 	if(!secboot_en_memoria)
 	{
 		// Si no está en memoria, cárgalo
-		result=vdreadseclog(1,(char *) &secboot);
+		char * buffer = malloc((int)sizeof(SecBootPart));
+		result=vdreadseclog(1,(char *) buffer);
+		memcpy(&secboot, buffer, (int) sizeof(SecBootPart));
 		secboot_en_memoria=1;
 	}
 		
@@ -667,7 +688,11 @@ int isinodefree(int inode)
 	if(!inodesmap_en_memoria)
 	{
 		// Si no está en memoria, hay que leerlo del disco
-		result=vdreadseclog(mapa_bits_nodos_i,&inode);		///checar
+		char *buffer = malloc ((int)sizeof(SecBootPart));
+		for(i = 0; i < secboot.sec_tabla_nodos_i; i ++){
+				result=vdreadseclog(inicio_nodos_i+i,buffer);	////checar
+				memcpy(&inode[i*8], buffer, (int) sizeof(SecBootPart));
+		}
 		inodesmap_en_memoria=1;
 	}
 
@@ -683,8 +708,7 @@ int setninode(int num, char *filename,unsigned short atribs, int uid, int gid)
 	int i;
 
 	int result;
-
-	int nodos_i_en_memoria = 0;									///checar
+							///checar
 	int inicio_nodos_i = 0;										///checar
 	inicio_nodos_i = secboot.sec_inicpart +secboot.sec_res; 	///checar
 
@@ -696,14 +720,16 @@ int setninode(int num, char *filename,unsigned short atribs, int uid, int gid)
 
 	// Si la tabla de nodos-i no está en memoria, 
 // hay que cargarla a memoria
-	if(!nodos_i_en_memoria)
+	if(!inodesmap_en_memoria)
 	{
-		for(i=0;i<secboot.sec_tabla_nodos_i;i++)
-			result=vdreadseclog(inicio_nodos_i+i,&inode[i*4]);
-
-		nodos_i_en_memoria=1;
+		// Si no está en memoria, hay que leerlo del disco
+		char *buffer = malloc ((int)sizeof(SecBootPart));
+		for(i = 0; i < secboot.sec_tabla_nodos_i; i ++){
+				result=vdreadseclog(inicio_nodos_i+i,buffer);	////checar
+				memcpy(&inode[i*8], buffer, (int) sizeof(SecBootPart));
+		}
+		inodesmap_en_memoria=1;
 	}
-
 	// Copiar el nombre del archivo en el nodo i
 	strncpy(inode[num].name,filename,18);
 
@@ -733,8 +759,7 @@ int setninode(int num, char *filename,unsigned short atribs, int uid, int gid)
 	// corresponde al inodo que estamos asignando.
 	// i=num/4;
 	// result=vdwriteseclog(inicio_nodos_i+i,&inode[i*4]);
-	for(i=0;i<secboot.sec_tabla_nodos_i;i++)
-		result=vdwriteseclog(inicio_nodos_i+i,&inode[i*4]);
+	writeInode(inode);
 
 	return(num);
 }
@@ -749,7 +774,6 @@ int searchinode(char *filename)
 	int free;
 	int result;
 
-	int nodos_i_en_memoria = 0;	///checar
 	int inicio_nodos_i = 0;		///checar
 	inicio_nodos_i = secboot.sec_inicpart +secboot.sec_res; 	///checar
 	//Antes de continuar debe cargarse en memoria el sector lógico 1 que es el sector de boot de la partición.
@@ -759,12 +783,15 @@ int searchinode(char *filename)
 	//También vamos a usar el número de sectores que tiene la tabla de nodos-i
 
 	// Traer los sectores lógicos de los nodos I a memoria
-	if(!nodos_i_en_memoria)
+	if(!inodesmap_en_memoria)
 	{
-		for(i=0;i<secboot.sec_tabla_nodos_i;i++)
-			result=vdreadseclog(inicio_nodos_i+i,&inode[i*4]);
-
-		nodos_i_en_memoria=1;
+		// Si no está en memoria, hay que leerlo del disco
+		char *buffer = malloc ((int)sizeof(SecBootPart));
+		for(i = 0; i < secboot.sec_tabla_nodos_i; i ++){
+				result=vdreadseclog(inicio_nodos_i+i,buffer);	////checar
+				memcpy(&inode[i*8], buffer, (int) sizeof(SecBootPart));
+		}
+		inodesmap_en_memoria=1;
 	}
 	
 	// El nombre del archivo no debe medir más de 18 bytes
@@ -836,14 +863,15 @@ int nextfreeinode()
 {
 	int i,j;
 	int result;
-	int inodesmap_en_memoria = 0; 		///checar
 
 	unsigned short inicio_nodos_i;		///checar
 	// Checar si el sector de boot de la partición está en memoria
 	if(!secboot_en_memoria)
 	{
 		// Si no está en memoria, cárgalo
-		result=vdreadseclog(1,(char *) &secboot);
+		char * buffer = malloc((int)sizeof(SecBootPart));
+		result=vdreadseclog(1,(char *) buffer);
+		memcpy(&secboot, buffer, (int) sizeof(SecBootPart));
 		secboot_en_memoria=1;
 	}
 	inicio_nodos_i = secboot.sec_inicpart +secboot.sec_res; 	///checar
@@ -855,10 +883,13 @@ int nextfreeinode()
 	if(!inodesmap_en_memoria)
 	{
 		// Si no está en memoria, hay que leerlo del disco
-		result=vdreadseclog(inicio_nodos_i, &inode);
+		char *buffer = malloc ((int)sizeof(SecBootPart));
+		for(i = 0; i < secboot.sec_tabla_nodos_i; i ++){
+				result=vdreadseclog(inicio_nodos_i+i,buffer);	////checar
+				memcpy(&inode[i*8], buffer, (int) sizeof(SecBootPart));
+		}
 		inodesmap_en_memoria=1;
 	}
-
 	// Recorrer byte por byte mientras sea 0xFF sigo recorriendo
 	i=0;
 	while(mapa_bits_nodos_i[i]==0xFF && i<3)
@@ -882,20 +913,21 @@ int nextfreeinode()
 
 
 // Poner en 1, el bit que corresponde al número de inodo indicado
-int assigninode(int inode)
+int assigninode(int inum)
 {
-	int offset=inode/8;
-	int shift=inode%8;
-	int result;
+	int offset=inum/8;
+	int shift=inum%8;
+	int result, i;
 
-	int inodesmap_en_memoria = 0; 		///checar
 	unsigned short inicio_nodos_i;		///checar
 
 	// Checar si el sector de boot de la partición está en memoria
 	if(!secboot_en_memoria)
 	{
 		// Si no está en memoria, cárgalo
-		result=vdreadseclog(1,(char *) &secboot);
+		char * buffer = malloc((int)sizeof(SecBootPart));
+		result=vdreadseclog(1,(char *) buffer);
+		memcpy(&secboot, buffer, (int) sizeof(SecBootPart));
 		secboot_en_memoria=1;
 	}
 	inicio_nodos_i= secboot.sec_inicpart +secboot.sec_res; 	
@@ -907,29 +939,35 @@ int assigninode(int inode)
 	if(!inodesmap_en_memoria)
 	{
 		// Si no está en memoria, hay que leerlo del disco
-		result=vdreadseclog(inicio_nodos_i,&inode);
+		char *buffer = malloc ((int)sizeof(SecBootPart));
+		for(i = 0; i < secboot.sec_tabla_nodos_i; i ++){
+				result=vdreadseclog(inicio_nodos_i+i,buffer);	////checar
+				memcpy(&inode[i*8], buffer, (int) sizeof(SecBootPart));
+		}
 		inodesmap_en_memoria=1;
 	}
 
 	mapa_bits_nodos_i[offset]|=(1<<shift); // Poner en 1 el bit indicado
-	vdwriteseclog(inicio_nodos_i,&inode);
+	writeInode(inode);
 	return(1);
 }
 
 // Poner en 0, el bit que corresponde al número de inodo indicado
-int unassigninode(int inode)
+int unassigninode(int inum)
 {
-	int offset=inode/8;
-	int shift=inode%8;
+	int i = 0;
+	int offset=inum/8;
+	int shift=inum%8;
 	int result;
-	int inodesmap_en_memoria = 0; 		///checar
 	unsigned short inicio_nodos_i;		///checar
 	
 	// Checar si el sector de boot de la partición está en memoria
 	if(!secboot_en_memoria)
 	{
 		// Si no está en memoria, cárgalo
-		result=vdreadseclog(1,(char *) &secboot);
+		char * buffer = malloc((int)sizeof(SecBootPart));
+		result=vdreadseclog(1,(char *) buffer);
+		memcpy(&secboot, buffer, (int) sizeof(SecBootPart));
 		secboot_en_memoria=1;
 	}
 	inicio_nodos_i= secboot.sec_inicpart +secboot.sec_res; 	
@@ -941,13 +979,18 @@ int unassigninode(int inode)
 	if(!inodesmap_en_memoria)
 	{
 		// Si no está en memoria, hay que leerlo del disco
-		result=vdreadseclog(inicio_nodos_i,&inode);	////checar
+		char *buffer = malloc ((int)sizeof(SecBootPart));
+		for(i = 0; i < secboot.sec_tabla_nodos_i; i ++){
+				result=vdreadseclog(inicio_nodos_i+i,buffer);	////checar
+				memcpy(&inode[i*8], buffer, (int) sizeof(SecBootPart));
+		}
 		inodesmap_en_memoria=1;
 	}
 
-
 	mapa_bits_nodos_i[offset]&=(char) ~(1<<shift); // Poner en cero el bit que corresponde al inodo indicado
-	vdwriteseclog(inicio_nodos_i,inode);
+
+	writeInode(inode);
+
 	return(1);
 }	
 
@@ -1012,6 +1055,35 @@ unsigned int currdatetimetoint()
 	now.sec=tm_ptr->tm_sec;
 
 	return(datetoint(now));
+}
+void writeInode(Inode inode[TOTAL_NODOS_I]){
+	unsigned short inicio_nodos_i;
+	char *buffer = malloc ((int)sizeof(SecBootPart));
+	inicio_nodos_i= secboot.sec_inicpart +secboot.sec_res; 	
+	int i;
+	for(i = 0; i < secboot.sec_tabla_nodos_i; i ++){
+		memcpy(buffer, &inode[i*8], (int) sizeof(SecBootPart));
+		vdwriteseclog(inicio_nodos_i,buffer);	////checar		
+	}
+
+}
+void readBlockMap(){
+	char *buffer = malloc ((int)sizeof(SecBootPart));
+	unsigned short inicio_nodos_i= secboot.sec_inicpart+secboot.sec_res+secboot.sec_mapa_bits_area_nodos_i; 	
+	int i;
+	for(i = 0; i < secboot.sec_mapa_bits_bloques; i ++){
+		vdreadseclog(inicio_nodos_i,buffer);	////checar		
+		memcpy(&mapa_bits_bloques[i*8],buffer , (int) sizeof(SecBootPart));
+	}
+}
+void writeBlockMap(){
+	char *buffer = malloc ((int)sizeof(SecBootPart));
+	unsigned short inicio_nodos_i= secboot.sec_inicpart+secboot.sec_res+secboot.sec_mapa_bits_area_nodos_i; 	
+	int i;
+	for(i = 0; i < secboot.sec_mapa_bits_bloques; i ++){
+		memcpy(buffer, &mapa_bits_bloques[i*8], (int) sizeof(SecBootPart));
+		vdwriteseclog(inicio_nodos_i,buffer);	////checar		
+	}
 }
 /*
 int vdwriteseclog(int drive, int seclog, char *buffer)
