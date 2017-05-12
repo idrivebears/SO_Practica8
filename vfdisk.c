@@ -16,7 +16,7 @@
 int main(int argc,char *argv[])
 {
 
-    // Write MBR to  
+    // Write MBR to first memory sector.
     int drive = 0;
     if(argc == 2) 
     {
@@ -25,8 +25,8 @@ int main(int argc,char *argv[])
 
     printf("Initializing disk %d\n", drive);
 
+    //Initialize partitions
     Partition partition_entries[4];
-    
     int i, j;
     for(i = 0; i < 4; i++)
     {
@@ -42,8 +42,8 @@ int main(int argc,char *argv[])
 
     }
 
+    // Initialize MBR values
     MBR init_mbr;
-
     for(i = 0; i < 446; i++)
     {
         init_mbr.bootstrap_code[i] = 0xFF;
@@ -52,10 +52,11 @@ int main(int argc,char *argv[])
     
     for(i = 0; i < 4; i ++)
         init_mbr.partition[i] = partition_entries[i];
-
+    
+    // Copy MBR to buffer
     char * buffer = malloc((int)sizeof(MBR));
     memcpy(buffer, &init_mbr, (int) sizeof(MBR));
-
+    //Write to memory sector 0
     int result = vdwritesector(drive, 0, 0, 1, 1, buffer);
 
 
