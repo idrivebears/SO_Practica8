@@ -75,17 +75,32 @@ int main(int argc,char *argv[])
     char * buffer = malloc((int)sizeof(MBR));
     memcpy(buffer, &init_mbr, (int) sizeof(MBR));
     //Write to memory sector 0
-    int result = vdwriteseclog(drive, 0, buffer);
+    int result = vdwriteseclog(0, buffer);
+    printf("MRB written.\n");
+    free(buffer);
 
     //Write SECBOOT to disk
 
     SecBootPart secboot;
-    memcpy(secboot.jump[4], )
+    memset(&secboot.jump[0], 0xFFFF, sizeof(secboot.jump));
+    strcpy(&secboot.nombre_particion[0], "Victoria");
+    secboot.sec_inicpart = 1;
+    secboot.sec_res = 1;
+    secboot.sec_mapa_bits_area_nodos_i = 1;
+    secboot.sec_mapa_bits_bloques = 6;
+    secboot.sec_tabla_nodos_i = 3;
+    secboot.sec_log_particion = 43199;
+    secboot.sec_x_bloque = 2;
+    secboot.heads = HEADS;
+    secboot.cyls = CYLINDERS;
+    secboot.secfis = SECTORS;
 
+    buffer = malloc((int)sizeof(SecBootPart));
+    memcpy(buffer, &secboot, (int)sizeof(SecBootPart));
 
-
-
-
+    result = vdwriteseclog(1, buffer);
+    printf("Secboot written.\n");
+    free(buffer);
 
     return 0;
 }
