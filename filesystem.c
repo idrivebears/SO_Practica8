@@ -1014,14 +1014,14 @@ unsigned int currdatetimetoint()
 	return(datetoint(now));
 }
 /*
-int vdwriteseclog(int drive, int seclog, char *buffer)
+int vdwriteseclog(int seclog, char *buffer)
 {
 	int head, sector, cylinder;
 	sector = (seclog % SECTORS) + 1;
 	head = (seclog / SECTORS) % HEADS;
 	cylinder = seclog / (SECTORS * HEADS);
 
-	return vdwritesector(drive, head, cylinder, sector, 1, buffer);
+	return vdwritesector(0, head, cylinder, sector, 1, buffer);
 }
 
 int vdreadseclog(int seclog, char *buffer)
@@ -1031,6 +1031,5 @@ int vdreadseclog(int seclog, char *buffer)
 	head = (seclog / SECTORS) % HEADS;
 	cylinder = seclog / (SECTORS * HEADS);
 
-	return vdreadseclog(drive, head, cylinder, sector, 1, buffer);
-
+	return vdreadsector(0, head, cylinder, sector, 1, buffer);
 }*/

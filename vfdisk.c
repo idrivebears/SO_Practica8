@@ -5,9 +5,6 @@
 #include "vdisk.h"
 #include "filesystem.h"
 
-#define LINESIZE 16
-#define SECSIZE 512
-
 // int vdwritesector(int drive, int head, int cylinder, int sector, int nsecs, char *buffer);
 // int vdreadsector(int drive, int head, int cylinder, int sector, int nsecs, char *buffer);
 
@@ -31,7 +28,6 @@ int vdreadseclog(int seclog, char *buffer)
 	cylinder = seclog / (SECTORS * HEADS);
 
 	return vdreadsector(0, head, cylinder, sector, 1, buffer);
-
 }
 
 int main(int argc,char *argv[])
@@ -94,6 +90,7 @@ int main(int argc,char *argv[])
     secboot.heads = HEADS;
     secboot.cyls = CYLINDERS;
     secboot.secfis = SECTORS;
+    memset(&secboot.restante[0], 0xFF, sizeof(secboot.restante));
 
     buffer = malloc((int)sizeof(SecBootPart));
     memcpy(buffer, &secboot, (int)sizeof(SecBootPart));
