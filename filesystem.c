@@ -2,12 +2,14 @@
 
 //Funciones del Sistema de Archivos
 int openfiles_inicializada = 0;
-Openfiles openfiles[24];
+OpenFile openfiles[24];
 Inode inode[24];					 ///checar
 SecBootPart secboot; 				 ///checar
 int secboot_en_memoria = 0;		     ///checar	
-int inodesmap_en_memoria = 0; 		 ///checar
 char mapa_bits_nodos_i[3] = {0,0,0}; ///checar
+char mapa_bits_bloques[secboot.sec_mapa_bits_bloques*512]; ///6 *512 *8 = 24576
+int blocksmap_en_memoria = 0;
+int nodos_i_en_memoria   = 0;			 ///checar
 
 int vdopen(char *filename,unsigned short mode)
 {
@@ -163,6 +165,7 @@ int vdwrite(int fd, char *buffer, int bytes)
 	int i;
 	int result;
 	unsigned short *currptr;
+	unsigned short inicio_nodos_i = secboot.sec_inicpart + secboot.sec_res; 	
 
 	// Si no está abierto, regresa error
 	if(openfiles[fd].inuse==0)
@@ -242,6 +245,8 @@ int isblockfree(int block)
 	int result;
 	int i;
 
+	unsigned short inicio_area_datos;
+
 	// Determinar si tenemos el sector de boot de la partición en memoria
 	if(!secboot_en_memoria)
 	{
@@ -250,7 +255,7 @@ int isblockfree(int block)
 	}
 
 	// Calcular el sector lógico donde está el mapa de bits de los bloques
-	mapa_bits_bloques= secboot.sec_inicpart+secboot.sec_res+secboot.sec_mapa_bits_nodos_i;
+	inicio_area_datos = secboot.sec_inicpart+secboot.sec_res+secboot.sec_mapa_bits_area_nodos_i;
 	
 	// Verificar si ya está en memoria, si no, cargarlo
 	if(!blocksmap_en_memoria)
@@ -258,7 +263,7 @@ int isblockfree(int block)
 		// Cargar todos los sectores que corresponden al 
 		// mapa de bits
 		for(i=0;i<secboot.sec_mapa_bits_bloques;i++)
-			result=vdreadseclog(mapa_bits_bloques+i,blocksmap+i*512);
+			result=vdreadseclog(inicio_area_datos+i,blocksmap+i*512);
 		blocksmap_en_memoria=1;
 	}
 
@@ -274,6 +279,7 @@ int nextfreeblock()
 	int i,j;
 	int result;
 
+	unsigned short inicio_area_datos;
 	// Determinar si tenemos el sector de boot de la partición en memoria
 	if(!secboot_en_memoria)
 	{
@@ -282,7 +288,7 @@ int nextfreeblock()
 	}
 
 	// Calcular el sector lógico donde está el mapa de bits de los bloques
-	mapa_bits_bloques= secboot.sec_inicpart+secboot.sec_res+secboot.sec_mapa_bits_nodos_i;
+	inicio_area_datos = secboot.sec_inicpart+secboot.sec_res+secboot.sec_mapa_bits_area_nodos_i;
 	
 	// Verificar si ya está en memoria, si no, cargarlo
 	if(!blocksmap_en_memoria)
@@ -290,7 +296,7 @@ int nextfreeblock()
 		// Cargar todos los sectores que corresponden al 
 		// mapa de bits
 		for(i=0;i<secboot.sec_mapa_bits_bloques;i++)
-			result=vdreadseclog(mapa_bits_bloques+i,blocksmap+i*512);
+			result=vdreadseclog(inicio_area_datos+i,blocksmap+i*512);
 		blocksmap_en_memoria=1;
 	}
 
@@ -320,6 +326,7 @@ int assignblock(int block)
 	int i;
 	int sector;
 
+	unsigned short inicio_area_datos;
 	// Determinar si tenemos el sector de boot de la partición en memoria
 	if(!secboot_en_memoria)
 	{
@@ -328,7 +335,7 @@ int assignblock(int block)
 	}
 
 	// Calcular el sector lógico donde está el mapa de bits de los bloques
-	mapa_bits_bloques= secboot.sec_inicpart+secboot.sec_res+secboot.sec_mapa_bits_nodos_i;
+	inicio_area_datos= secboot.sec_inicpart+secboot.sec_res+secboot.sec_mapa_bits_area_nodos_i;
 	
 	// Verificar si ya está en memoria, si no, cargarlo
 	if(!blocksmap_en_memoria)
@@ -336,14 +343,14 @@ int assignblock(int block)
 		// Cargar todos los sectores que corresponden al 
 		// mapa de bits
 		for(i=0;i<secboot.sec_mapa_bits_bloques;i++)
-			result=vdreadseclog(mapa_bits_bloques+i,blocksmap+i*512);
+			result=vdreadseclog(inicio_area_datos+i,blocksmap+i*512);
 		blocksmap_en_memoria=1;
 	}
 
 	blocksmap[offset]|=(1<<shift);
 
 	sector=(offset/512)*512;
-	vdwriteseclog(mapa_bits_bloques+sector,blocksmap+sector*512);
+	vdwriteseclog(inicio_area_datos+sector,blocksmap+sector*512);
 	//for(i=0;i<secboot.sec_mapa_bits_bloques;i++)
 	//	vdwriteseclog(mapa_bits_bloques+i,blocksmap+i*512);
 	return(1);
@@ -359,6 +366,7 @@ int unassignblock(int block)
 	int sector;
 	int i;
 
+	unsigned short inicio_area_datos; ///checar
 	// Determinar si tenemos el sector de boot de la partición en memoria
 	if(!secboot_en_memoria)
 	{
@@ -367,7 +375,7 @@ int unassignblock(int block)
 	}
 
 	// Calcular el sector lógico donde está el mapa de bits de los bloques
-	mapa_bits_bloques= secboot.sec_inicpart+secboot.sec_res+secboot.sec_mapa_bits_nodos_i;
+	inicio_area_datos = secboot.sec_inicpart+secboot.sec_res+secboot.sec_mapa_bits_area_nodos_i;
 	
 	// Verificar si ya está en memoria, si no, cargarlo
 	if(!blocksmap_en_memoria)
@@ -375,14 +383,14 @@ int unassignblock(int block)
 		// Cargar todos los sectores que corresponden al 
 		// mapa de bits
 		for(i=0;i<secboot.sec_mapa_bits_bloques;i++)
-			result=vdreadseclog(mapa_bits_bloques+i,blocksmap+i*512);
+			result=vdreadseclog(inicio_area_datos+i,blocksmap+i*512);
 		blocksmap_en_memoria=1;
 	}
 
 	blocksmap[offset]&=(char) ~(1<<shift);
 
 	sector=(offset/512)*512;
-	vdwriteseclog(mapa_bits_bloques+sector,blocksmap+sector*512);
+	vdwriteseclog(inicio_area_datos+sector,blocksmap+sector*512);
 	// for(i=0;i<secboot.sec_mapa_bits_bloques;i++)
 	//	vdwriteseclog(mapa_bits_bloques+i,blocksmap+i*512);
 	return(1);
@@ -398,6 +406,7 @@ int writeblock(int block,char *buffer)
 	int result;
 	int i;
 
+	unsigned short inicio_area_datos; ///checar
 	// Determinar si el sector de boot de la partición está en memoria, si no está en memoria, cargarlo
 	if(!secboot_en_memoria)
 	{
@@ -412,7 +421,7 @@ int writeblock(int block,char *buffer)
     //							sectores mapa de bits area de nodos i+	
 	//							sectores mapa de bits area de datos+	
 	//							sectores area nodos i (dr)
-	inicio_area_datos=secboot.sec_inicpart+secboot.sec_res++secboot.sec_mapa_bits_nodosi +secboot.sec_mapa_bits_bloques+secboot.sec_tabla_nodos_i;
+	inicio_area_datos=secboot.sec_inicpart+secboot.sec_res+secboot.sec_mapa_bits_area_nodos_i +secboot.sec_mapa_bits_bloques+secboot.sec_tabla_nodos_i;
 
 	// Escribir todos los sectores que corresponden al 
 	// bloque
@@ -425,7 +434,7 @@ int readblock(int block,char *buffer)
 {
 	int result;
 	int i;
-
+	unsigned short inicio_area_datos;
 	// Determinar si el sector de boot de la partición está en memoria, si no está en memoria, cargarlo
 	if(!secboot_en_memoria)
 	{
@@ -440,7 +449,7 @@ int readblock(int block,char *buffer)
     //							sectores mapa de bits area de nodos i+	
 	//							sectores mapa de bits area de datos+	
 	//							sectores area nodos i (dr)
-	inicio_area_datos=secboot.sec_inicpart+secboot.sec_res++secboot.sec_mapa_bits_nodosi +secboot.sec_mapa_bits_bloques+secboot.sec_tabla_nodos_i;
+	inicio_area_datos=secboot.sec_inicpart+secboot.sec_res+secboot.sec_mapa_bits_area_nodos_i +secboot.sec_mapa_bits_bloques+secboot.sec_tabla_nodos_i;
 
 	for(i=0;i<secboot.sec_x_bloque;i++)
 		vdreadseclog(inicio_area_datos+(block-1)*secboot.sec_x_bloque+i,buffer+512*i);
@@ -466,7 +475,7 @@ unsigned short *postoptr(int fd,int pos)
 	// Está en los primeros 10 K
 	if((pos/1024)<10)
 		// Está entre los 10 apuntadores directos
-		currptr=&inode[currinode].blocks[pos/1024];
+		currptr=&inode[currinode].direct_blocks[pos/1024];
 	else if((pos/1024)<522)
 	{
 		// Si el indirecto está vacío, asígnale un bloque
@@ -506,6 +515,9 @@ VDDIR *vdopendir(char *path)
 {
 	int i=0;
 	int result;
+
+	unsigned short inicio_nodos_i;		///checar
+	inicio_nodos_i = secboot.sec_inicpart +secboot.sec_res; 
 
 	if(!secboot_en_memoria)
 	{
@@ -547,6 +559,11 @@ struct vddirent *vdreaddir(VDDIR *dirdesc)
 	int i;
 
 	int result;
+
+	unsigned short inicio_nodos_i;		///checar
+	vddirent current;					///new
+	inicio_nodos_i = secboot.sec_inicpart +secboot.sec_res; 
+
 	if(!nodos_i_en_memoria)
 	{
 		for(i=0;i<secboot.sec_tabla_nodos_i;i++)
@@ -630,8 +647,9 @@ int isinodefree(int inode)
 	int shift=inode%8;
 	int result;
 
+	int inodesmap_en_memoria = 0; 		///checar
 	unsigned short inicio_nodos_i;		///checar
-
+	inicio_nodos_i = secboot.sec_inicpart +secboot.sec_res; 
 
 	// Checar si el sector de boot de la partición está en memoria
 	if(!secboot_en_memoria)
@@ -640,7 +658,7 @@ int isinodefree(int inode)
 		result=vdreadseclog(1,(char *) &secboot);
 		secboot_en_memoria=1;
 	}
-	inicio_nodos_i = secboot.sec_inicpart +secboot.sec_res; 	
+		
 //Usamos la información del sector de boot de la partición para 
 						//determinar en que sector inicia el 
 						// mapa de bits de nodos i 
@@ -818,6 +836,7 @@ int nextfreeinode()
 {
 	int i,j;
 	int result;
+	int inodesmap_en_memoria = 0; 		///checar
 
 	unsigned short inicio_nodos_i;		///checar
 	// Checar si el sector de boot de la partición está en memoria
@@ -869,6 +888,7 @@ int assigninode(int inode)
 	int shift=inode%8;
 	int result;
 
+	int inodesmap_en_memoria = 0; 		///checar
 	unsigned short inicio_nodos_i;		///checar
 
 	// Checar si el sector de boot de la partición está en memoria
@@ -902,7 +922,7 @@ int unassigninode(int inode)
 	int offset=inode/8;
 	int shift=inode%8;
 	int result;
-	
+	int inodesmap_en_memoria = 0; 		///checar
 	unsigned short inicio_nodos_i;		///checar
 	
 	// Checar si el sector de boot de la partición está en memoria
@@ -938,7 +958,7 @@ int unassigninode(int inode)
 
 
 
-unsigned int datetoint(struct Date date)
+unsigned int datetoint(Date date)
 {
 	unsigned int val=0;
 
@@ -957,7 +977,7 @@ unsigned int datetoint(struct Date date)
 	return(val);
 }
 
-int inttodate(struct Date *date,unsigned int val)
+int inttodate(Date *date,unsigned int val)
 {
 	date->sec=val&0x3F;
 	val>>=6;
@@ -979,7 +999,7 @@ unsigned int currdatetimetoint()
 	struct tm *tm_ptr;
 	time_t the_time;
 	
-	struct Date now;
+	Date now;
 
 	(void) time(&the_time);
 	tm_ptr=gmtime(&the_time);

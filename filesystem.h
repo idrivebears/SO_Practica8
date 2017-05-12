@@ -38,7 +38,7 @@ typedef struct {
 	char bootstrap_code[446];
 	Partition partition[4];
 	short boot_signature;
-} MBR;
+} MBR  ;
 // printf("%d\n",sizeof(struct MBR));
 
 
@@ -87,7 +87,7 @@ typedef struct {
 
 //GLOBALS
 #define TOTAL_NODOS_I 24   			 ///checar
-
+#define TAMBLOQUE 1024
 int isinodefree(int inode);
 int setninode(int num, char *filename,unsigned short atribs, int uid, int gid);
 int searchinode(char *filename);
@@ -95,7 +95,6 @@ int removeinode(int numinode);
 int nextfreeinode();
 int assigninode(int inode);
 int unassigninode(int inode);
-
 unsigned int datetoint(Date date);
 int inttodate(Date *date,unsigned int val);
 unsigned int currdatetimetoint();
@@ -119,6 +118,3 @@ struct vddirent *vdreaddir(VDDIR *dirdesc);
 int vdclosedir(VDDIR *dirdesc);
 int vdread(int fd, char *buffer, int bytes);
 int vdclose(int fd);
-
-int vdwriteseclog(int seclog, char *buffer);
-int vdreadseclog(int seclog, char *buffer);
