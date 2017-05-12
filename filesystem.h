@@ -38,7 +38,7 @@ typedef struct {
 	char bootstrap_code[446];
 	Partition partition[4];
 	short boot_signature;
-} MBR  ;
+} MBR;
 // printf("%d\n",sizeof(struct MBR));
 
 
