@@ -10,3 +10,5 @@ vfdisk: vfdisk.c
 	gcc -o vfdisk vfdisk.c vdisk.o filesystem.o
 filesystem: filesystem.c filesystem.h
 	gcc -c filesystem.c vdisk.o
+dumpseclog: dumpseclog.c
+	gcc -o dumpseclog dumpseclog.c filesystem.o vdisk.o
