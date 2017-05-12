@@ -4,12 +4,6 @@
 #include <time.h>
 #include <string.h>
 
-#define TOTAL_NODOS_I 24   			 ///checar
-INODE inode[24];					 ///checar
-SECBOOTPART secboot; 				 ///checar
-int secboot_en_memoria = 1;		     ///checar	
-char mapa_bits_nodos_i[3] = {0,0,0}; ///checar
-
 typedef struct  {
 	int inuse;		// 0 cerrado, 1 abierto
 	unsigned short inode;
@@ -42,7 +36,7 @@ typedef struct{
 // Debe medir 512 bytes
 typedef struct {
 	char bootstrap_code[446];
-	struct PARTITION partition[4];
+	Partition partition[4];
 	short boot_signature;
 } MBR  ;
 // printf("%d\n",sizeof(struct MBR));
@@ -91,6 +85,13 @@ typedef struct {
 	int sec;
 } Date;
 
+//GLOBALS
+#define TOTAL_NODOS_I 24   			 ///checar
+Inode inode[24];					 ///checar
+SecBootPart secboot; 				 ///checar
+int secboot_en_memoria = 1;		     ///checar	
+char mapa_bits_nodos_i[3] = {0,0,0}; ///checar
+
 int isinodefree(int inode);
 int setninode(int num, char *filename,unsigned short atribs, int uid, int gid);
 int searchinode(char *filename);
@@ -98,8 +99,8 @@ int removeinode(int numinode);
 int nextfreeinode();
 int assigninode(int inode);
 int unassigninode(int inode);
-unsigned int datetoint(struct DATE date);
-int inttodate(struct DATE *date,unsigned int val);
+unsigned int datetoint(Date date);
+int inttodate(Date *date,unsigned int val);
 unsigned int currdatetimetoint();
 
 
