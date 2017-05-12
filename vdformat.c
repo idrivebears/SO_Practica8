@@ -10,9 +10,9 @@ int main(int argc,char *argv[])
 
     //Escribir mapa de nodos i
     char buffer[512];
-    memset(&buffer[0], 0x00, sizeof(mapa_nodosi));
+    memset(&buffer[0], 0xFF, sizeof(buffer));
 
-    memcpy(buffer, &mapa_nodosi, sizeof(mapa_nodosi));
+    memcpy(buffer, &buffer, sizeof(buffer));
     int re = vdwriteseclog(2, buffer);
 
     re += vdwriteseclog(3, buffer);
