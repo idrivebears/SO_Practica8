@@ -5,8 +5,8 @@
 #include <string.h>
 
 #define TOTAL_NODOS_I 24   			 ///checar
-INODE inode[24];					 ///checar
-SECBOOTPART secboot; 				 ///checar
+Inode inode[24];					 ///checar
+SecBootPart secboot; 				 ///checar
 int secboot_en_memoria = 1;		     ///checar	
 char mapa_bits_nodos_i[3] = {0,0,0}; ///checar
 
@@ -98,8 +98,8 @@ int removeinode(int numinode);
 int nextfreeinode();
 int assigninode(int inode);
 int unassigninode(int inode);
-unsigned int datetoint(struct DATE date);
-int inttodate(struct DATE *date,unsigned int val);
+unsigned int datetoint(struct Date date);
+int inttodate(struct Date *date,unsigned int val);
 unsigned int currdatetimetoint();
 
 
