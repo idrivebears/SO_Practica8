@@ -15,6 +15,8 @@
 
 int main(int argc,char *argv[])
 {
+
+    // Write MBR to  
     int drive = 0;
     if(argc == 2) 
     {
@@ -55,6 +57,8 @@ int main(int argc,char *argv[])
     memcpy(buffer, &init_mbr, (int) sizeof(MBR));
 
     int result = vdwritesector(drive, 0, 0, 1, 1, buffer);
+
+
 
     return 0;
 }
