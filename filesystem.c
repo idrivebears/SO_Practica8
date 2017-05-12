@@ -1,5 +1,4 @@
-#include "common_data.h"
-#include "inode.h"
+#include "filesystem.h"
 
 //Funciones del Sistema de Archivos
 int openfiles_inicializada = 0;
@@ -833,7 +832,7 @@ int nextfreeinode()
 	if(!inodesmap_en_memoria)
 	{
 		// Si no está en memoria, hay que leerlo del disco
-		result=vdreadseclog(inicio_nodos_i, mapa_bits_nodos_i);
+		result=vdreadseclog(inicio_nodos_i, &inode);
 		inodesmap_en_memoria=1;
 	}
 

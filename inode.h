@@ -5,7 +5,16 @@
 #include <string.h>
 #include "common_data.h"
 
+
+#define TOTAL_NODOS_I 24   			 ///checar
+INODE inode[24];					 ///checar
+SECBOOTPART secboot; 				 ///checar
+int secboot_en_memoria = 1;		     ///checar	
+char mapa_bits_nodos_i[3] = {0,0,0}; ///checar
+
+
 // Debe medir 64 bytes, importante es que el tamaño sea potencia de 2
+
 typedef struct  {
 	char name[18];
 	unsigned int datetimecreat;			// 32 bits

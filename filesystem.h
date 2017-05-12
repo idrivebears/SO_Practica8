@@ -15,7 +15,7 @@ typedef struct  {
 	int currbloqueenmemoria;
 	char buffer[1024];
 	unsigned short buffindirect[512]; //		
-}OPENFILES;
+}OpenFile;
 
 typedef int VDDIR;
 
