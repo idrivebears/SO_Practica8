@@ -1,6 +1,8 @@
+#include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
+#include <time.h>
+#include <string.h>
 
 #define TOTAL_NODOS_I 24   			 ///checar
 INODE inode[24];					 ///checar
@@ -34,7 +36,7 @@ typedef struct{
 	char chs_end[3];
 	int lba;
 	int secs_partition;
-}PARTITION; 
+}Partition; 
 
 // Lo que vamos a escribir en el primer sector del disco
 // Debe medir 512 bytes
@@ -61,7 +63,7 @@ typedef struct  {
 	unsigned char cyls;							// 200 cilindros
 	unsigned char secfis;						// 27 sectores por track
 	char restante[484];							// Código de arranque
-}SECBOOTPART;
+}SecBootPart;
 
 // Debe medir 64 bytes, importante es que el tamaño sea potencia de 2
 typedef struct  {
@@ -76,7 +78,7 @@ typedef struct  {
 	unsigned short direct_blocks[10];	// 10 x 16 bits = 20 bytes
 	unsigned short indirect;			// 16 bits
 	unsigned short indirect2;			// 16 bits
-} INODE;
+} Inode;
 
 // printf("%d\n",sizeof(struct INODE));
 
@@ -87,7 +89,7 @@ typedef struct {
 	int hour;
 	int min;
 	int sec;
-} DATE;
+} Date;
 
 int isinodefree(int inode);
 int setninode(int num, char *filename,unsigned short atribs, int uid, int gid);
