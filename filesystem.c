@@ -3,6 +3,11 @@
 //Funciones del Sistema de Archivos
 int openfiles_inicializada = 0;
 OPENFILES openfiles[24];
+Inode inode[24];					 ///checar
+SecBootPart secboot; 				 ///checar
+int secboot_en_memoria = 1;		     ///checar	
+char mapa_bits_nodos_i[3] = {0,0,0}; ///checar
+
 int vdopen(char *filename,unsigned short mode)
 {
 	// Les toca hacerla a ustedes

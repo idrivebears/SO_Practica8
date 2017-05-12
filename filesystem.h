@@ -87,10 +87,6 @@ typedef struct {
 
 //GLOBALS
 #define TOTAL_NODOS_I 24   			 ///checar
-Inode inode[24];					 ///checar
-SecBootPart secboot; 				 ///checar
-int secboot_en_memoria = 1;		     ///checar	
-char mapa_bits_nodos_i[3] = {0,0,0}; ///checar
 
 int isinodefree(int inode);
 int setninode(int num, char *filename,unsigned short atribs, int uid, int gid);
