@@ -6,11 +6,10 @@
 
 int main(int argc,char *argv[])
 {   
-    printf("done");
 
     //Escribir mapa de nodos i
     char buffer[512];
-    memset(&buffer[0], 0xFF, sizeof(buffer));
+    memset(&buffer[0], 0x00, sizeof(buffer));
 
     memcpy(buffer, &buffer, sizeof(buffer));
     int re = vdwriteseclog(2, buffer);
@@ -21,7 +20,10 @@ int main(int argc,char *argv[])
     if(re == 4)
         printf("Disk format completed successfuly.\n");
     else
-        printf("DISK FORMAT ERROR.\n [%d]", re);
+        printf("DISK FORMAT ERROR.\n [%d]\n", re);
+
+    
+    printf(" ");
     
     return 0;
 }

@@ -10,26 +10,6 @@
 
 /*This program initializes disk partitions*/
 
-int vdwriteseclog(int seclog, char *buffer)
-{
-	int head, sector, cylinder;
-	sector = (seclog % SECTORS) + 1;
-	head = (seclog / SECTORS) % HEADS;
-	cylinder = seclog / (SECTORS * HEADS);
-
-	return vdwritesector(0, head, cylinder, sector, 1, buffer);
-}
-
-int vdreadseclog(int seclog, char *buffer)
-{tiene 
-	int head, sector, cylinder;
-	sector = (seclog % SECTORS) + 1;
-	head = (seclog / SECTORS) % HEADS;
-	cylinder = seclog / (SECTORS * HEADS);
-
-	return vdreadsector(0, head, cylinder, sector, 1, buffer);
-}
-
 int main(int argc,char *argv[])
 {
 
