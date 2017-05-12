@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <string.h>
+#include "vdisk.h"
 
 typedef struct  {
 	int inuse;		// 0 cerrado, 1 abierto

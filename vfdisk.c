@@ -75,7 +75,14 @@ int main(int argc,char *argv[])
     char * buffer = malloc((int)sizeof(MBR));
     memcpy(buffer, &init_mbr, (int) sizeof(MBR));
     //Write to memory sector 0
-    int result = vdwritesector(drive, 0, 0, 1, 1, buffer);
+    int result = vdwriteseclog(drive, 0, buffer);
+
+    //Write SECBOOT to disk
+
+    SecBootPart secboot;
+
+
+
 
 
 
