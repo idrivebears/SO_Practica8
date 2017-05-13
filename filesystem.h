@@ -97,10 +97,11 @@ int unassigninode(int inode);	//working
 void load_inodemap();			//working
 void write_inodemap();			//working
 
-int set_inode(int num, char *filename,unsigned short atribs, int uid, int gid);
-int search_inode(char *filename);
-int remove_inode(int numinode);
-void write_inode();
+int set_inode(int num, char *filename,unsigned short atribs, int uid, int gid); //working
+int search_inode(char *filename);												//working
+int remove_inode(int numinode);													//working
+void write_inode();																//working
+void load_inodes();																//working
 
 unsigned int datetoint(Date date);
 int inttodate(Date *date,unsigned int val);

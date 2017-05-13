@@ -1,4 +1,4 @@
-all: filesystem vfdisk vdformat run_format
+all: filesystem vfdisk vdformat user_fs run_format
 run_format:
 	rm disco0.vd
 	./createvd 0
@@ -9,7 +9,7 @@ vdformat: vdformat.c
 vfdisk: vfdisk.c
 	gcc -o vfdisk vfdisk.c vdisk.o filesystem.o
 filesystem: filesystem.c filesystem.h
-	gcc -c filesystem.c vdisk.o
+	gcc -c filesystem.c 
 dumpseclog: dumpseclog.c
 	gcc -o dumpseclog dumpseclog.c filesystem.o vdisk.o
 user_fs: user_fs.c

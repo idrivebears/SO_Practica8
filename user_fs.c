@@ -6,16 +6,14 @@
 
 int main(int argc,char *argv[])
 {
-    printf("nextfreenode: %d\n", nextfreeinode());
-    assigninode(0);
-    assigninode(1);
-    assigninode(2);
-    assigninode(3);
-    printf("nextfreenode: %d\n", nextfreeinode());
-    unassigninode(0);
-    unassigninode(1);
-    unassigninode(2);
-    printf("isinode 0 free> %d", isinodefree(0));
-    printf("nextfreenode: %d\n", nextfreeinode());
+    // int set_inode(int num, char *filename,unsigned short atribs, int uid, int gid);
+
+    printf("isinode 0 free:%d\n", isinodefree(0));
+    set_inode(1, "EstoyAqui", 1, 2, 3);
+    printf("isinode 0 free:%d\n", isinodefree(0));
+    printf("search found: %d\n", search_inode("EstoyAqui"));
+    //remove_inode(0);
+    printf("isinode 0 free:%d\n", isinodefree(0));
+
     return 0;
 }

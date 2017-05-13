@@ -538,18 +538,13 @@ VDDIR *vdopendir(char *path)
 		secboot_en_memoria=1;
 	}
 
-//Aquí se debe calcular la variable inicio_nodos_i con los datos que están en el sector de boot de la partición
+	//Aquí se debe calcular la variable inicio_nodos_i con los datos que están en el sector de boot de la partición
 
 	// Determinar si la tabla de nodos i está en memoria
-// si no está en memoria, hay que cargarlos
+	// si no está en memoria, hay que cargarlos
 	if(!inodes_loaded)
 	{
-		// Si no está en memoria, hay que leerlo del disco
-		char *buffer = malloc ((int)sizeof(SecBootPart));
-		for(i = 0; i < secboot.sec_tabla_nodos_i; i ++){
-				result=vdreadseclog(inicio_nodos_i+i,buffer);	////checar
-				memcpy(&inode[i*8], buffer, SECTORSIZE);
-		}
+		load_inodes();
 		inodes_loaded=1;
 	}
 
@@ -585,12 +580,7 @@ vddirent * vdreaddir(VDDIR *dirdesc)
 
 	if(!inodes_loaded)
 	{
-		// Si no está en memoria, hay que leerlo del disco
-		char *buffer = malloc ((int)sizeof(SecBootPart));
-		for(i = 0; i < secboot.sec_tabla_nodos_i; i ++){
-				result=vdreadseclog(inicio_nodos_i+i,buffer);	////checar
-				memcpy(&inode[i*8], buffer, SECTORSIZE);
-		}
+		load_inodes();
 		inodes_loaded=1;
 	}
 
@@ -598,7 +588,6 @@ vddirent * vdreaddir(VDDIR *dirdesc)
 	// Mientras no haya nodo i, avanza
 	while(isinodefree(*dirdesc) && *dirdesc<4096)
 		(*dirdesc)++;
-
 
 	// Apunta a donde está el nombre en el inodo	
 	current->d_name=inode[*dirdesc].name;
@@ -767,7 +756,7 @@ int search_inode(char *filename)
 	int free;
 	int result;
 
-	int inicio_nodos_i = 0;		///checar
+	int inicio_nodos_i = 0;										///checar
 	inicio_nodos_i = secboot.sec_inicpart +secboot.sec_res; 	///checar
 	//Antes de continuar debe cargarse en memoria el sector lógico 1 que es el sector de boot de la partición.
 
