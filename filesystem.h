@@ -21,7 +21,6 @@ typedef struct
 	char *d_name;
 } vddirent;
 
-struct vddirent *vdreaddir(VDDIR *dirdesc);
 VDDIR *vdopendir(char *path);
 
 typedef struct{
@@ -117,7 +116,7 @@ int readblock(int block,char *buffer);
 unsigned short *postoptr(int fd,int pos);
 unsigned short *currpostoptr(int fd);
 VDDIR *vdopendir(char *path);
-struct vddirent *vdreaddir(VDDIR *dirdesc);
+vddirent *vdreaddir(VDDIR *dirdesc);
 int vdclosedir(VDDIR *dirdesc);
 int vdread(int fd, char *buffer, int bytes);
 

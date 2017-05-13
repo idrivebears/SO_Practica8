@@ -434,7 +434,7 @@ int writeblock(int block,char *buffer)
 	// Escribir todos los sectores que corresponden al 
 	// bloque
 	for(i=0;i<secboot.sec_x_bloque;i++)
-		vdwriteseclog(inicio_area_datos+(block-1)*secboot.sec_x_bloque+i,blockBuffer+512*i);
+		vdwriteseclog(inicio_area_datos+(block-1)*secboot.sec_x_bloque+i,blockBuffer[512*i]);
 	return(1);	
 }
 
@@ -461,7 +461,7 @@ int readblock(int block,char *buffer)
 	inicio_area_datos=secboot.sec_inicpart+secboot.sec_res+secboot.sec_mapa_bits_area_nodos_i +secboot.sec_mapa_bits_bloques+secboot.sec_tabla_nodos_i;
 
 	for(i=0;i<secboot.sec_x_bloque;i++)
-		vdreadseclog(inicio_area_datos+(block-1)*secboot.sec_x_bloque+i,blockBuffer+512*i);
+		vdreadseclog(inicio_area_datos+(block-1)*secboot.sec_x_bloque+i,blockBuffer[512*i]);
 	return(1);	
 }
 
@@ -570,15 +570,17 @@ VDDIR *vdopendir(char *path)
 
 
 // Lee la siguiente entrada del directorio abierto
-struct vddirent *vdreaddir(VDDIR *dirdesc)
+vddirent * vdreaddir(VDDIR *dirdesc)
 {
 	int i;
 
 	int result;
 
 	unsigned short inicio_nodos_i;		///checar
-	vddirent current;					///new
+	vddirent *current;					///new
 	inicio_nodos_i = secboot.sec_inicpart +secboot.sec_res; 
+
+	current = (vddirent *) malloc(sizeof(vddirent));
 
 	if(!inodesmap_en_memoria)
 	{
@@ -598,13 +600,13 @@ struct vddirent *vdreaddir(VDDIR *dirdesc)
 
 
 	// Apunta a donde está el nombre en el inodo	
-	current.d_name=inode[*dirdesc].name;
+	current->d_name=inode[*dirdesc].name;
 
 	(*dirdesc)++;
 
 	if(*dirdesc>=24)
 		return(NULL);
-	return( &current);	
+	return(current);	
 }
 
 
