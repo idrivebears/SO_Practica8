@@ -2,7 +2,7 @@
 
 //Funciones del Sistema de Archivos
 int openfiles_inicializada = 0;
-OpenFile openfiles[24];
+OpenFile openfiles[16];
 Inode inode[24];					 	///checar
 SecBootPart secboot; 				 	///checar
 int secboot_en_memoria = 0;		     	///checar	
@@ -13,7 +13,7 @@ int inodemap_loaded = 0;
 int inodes_loaded   = 0;			///checar
 char *block_buffer[1024];
 
-int vdopen(char *filename,unsigned short mode)
+int vdopen(char *filename, unsigned short mode)
 {
 	// Les toca hacerla a ustedes
 }
@@ -157,7 +157,7 @@ int vdseek(int fd, int offset, int whence)
 	return(openfiles[fd].currpos);
 }
 
-// Esta es la función más difícil, 
+// Esta es la función más difícil.
 int vdwrite(int fd, char *buffer, int bytes)
 {
 	int currblock;
@@ -170,6 +170,7 @@ int vdwrite(int fd, char *buffer, int bytes)
 	unsigned short inicio_nodos_i = secboot.sec_inicpart + secboot.sec_res; 	
 
 	// Si no está abierto, regresa error
+	printf("hola 4\n");
 	if(openfiles[fd].inuse==0)
 		return(-1);
 
@@ -177,6 +178,7 @@ int vdwrite(int fd, char *buffer, int bytes)
 
 	// Copiar byte por byte del buffer que recibo como 
 	// argumento al buffer del archivo
+	printf("hola 3\n");
 	while(cont<bytes)
 	{
 		// Obtener la dirección de donde está el bloque que corresponde
@@ -227,8 +229,12 @@ int vdwrite(int fd, char *buffer, int bytes)
 		cont++;
 
 		// Si se llena el buffer, escríbelo
+		printf("hola 1. %d, %d\n", currblock, openfiles[fd].currpos);
 		if(openfiles[fd].currpos%BLOCKSIZE==0)
+		{
+			printf("hola kjl%d\n", currblock);
 			writeblock(currblock,openfiles[fd].buffer);
+		}
 	}
 	return(cont);
 } 

@@ -6,14 +6,13 @@
 
 int main(int argc,char *argv[])
 {
-    // int set_inode(int num, char *filename,unsigned short atribs, int uid, int gid);
+    // int vdcreat(char *filename,unsigned short perms);
 
-    printf("isinode 0 free:%d\n", isinodefree(0));
-    set_inode(1, "EstoyAqui", 1, 2, 3);
-    printf("isinode 0 free:%d\n", isinodefree(0));
-    printf("search found: %d\n", search_inode("EstoyAqui"));
-    //remove_inode(0);
-    printf("isinode 0 free:%d\n", isinodefree(0));
+    int fid = vdcreat("Weko", 1);
+    char *mymessage = malloc(2048);
+    mymessage = "Este es un mensaje para todos los ninos de hoy.";
+    int a = vdwrite(fid, mymessage, sizeof(mymessage));
+    printf("Hola %d\n",a);
 
     return 0;
 }

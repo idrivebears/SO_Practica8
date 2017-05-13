@@ -18,7 +18,7 @@ int main(int argc,char *argv[])
     re += vdwriteseclog(4, buffer);
     re += vdwriteseclog(5, buffer);
     if(re == 4)
-        printf("Disk format completed successfuly.\n");
+        printf("Disk format completed successfully.\n");
     else
         printf("DISK FORMAT ERROR.\n [%d]\n", re);
 
