@@ -12,3 +12,5 @@ filesystem: filesystem.c filesystem.h
 	gcc -c filesystem.c vdisk.o
 dumpseclog: dumpseclog.c
 	gcc -o dumpseclog dumpseclog.c filesystem.o vdisk.o
+user_fs: user_fs.c
+	gcc -o user_fs user_fs.c vdisk.o filesystem.o

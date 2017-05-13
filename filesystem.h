@@ -91,9 +91,9 @@ typedef struct {
 #define SECTORSIZE 512
 
 int isinodefree(int inode);		//working
-int nextfreeinode();			//
+int nextfreeinode();			//working
 int assigninode(int inode);		//working
-int unassigninode(int inode);	//
+int unassigninode(int inode);	//working
 void load_inodemap();			//working
 void write_inodemap();			//working
 

@@ -409,7 +409,7 @@ int unassignblock(int block)
 // Lectura y escritura de bloques
 // **********************************************************************************
 
-int writeblock(int block,char *buffer)
+int writeblock(int block, char *buffer)
 {
 	int result;
 	int i;
@@ -430,7 +430,7 @@ int writeblock(int block,char *buffer)
     //							sectores mapa de bits area de nodos i+	
 	//							sectores mapa de bits area de datos+	
 	//							sectores area nodos i (dr)
-	inicio_area_datos=secboot.sec_inicpart+secboot.sec_res+secboot.sec_mapa_bits_area_nodos_i +secboot.sec_mapa_bits_bloques+secboot.sec_tabla_nodos_i;
+	inicio_area_datos = secboot.sec_inicpart+secboot.sec_res+secboot.sec_mapa_bits_area_nodos_i +secboot.sec_mapa_bits_bloques+secboot.sec_tabla_nodos_i;
 
 	// Escribir todos los sectores que corresponden al 
 	// bloque
@@ -716,15 +716,10 @@ int set_inode(int num, char *filename,unsigned short atribs, int uid, int gid)
 
 
 	// Si la tabla de nodos-i no está en memoria, 
-// hay que cargarla a memoria
+	// hay que cargarla a memoria
 	if(!inodes_loaded)
 	{
-		// Si no está en memoria, hay que leerlo del disco
-		char *buffer = malloc ((int)sizeof(SecBootPart));
-		for(i = 0; i < secboot.sec_tabla_nodos_i; i ++){
-				result=vdreadseclog(inicio_nodos_i+i,buffer);	////checar
-				memcpy(&inode[i*8], buffer, SECTORSIZE);
-		}
+		load_inodes();
 		inodes_loaded=1;
 	}
 	// Copiar el nombre del archivo en el nodo i
@@ -757,6 +752,7 @@ int set_inode(int num, char *filename,unsigned short atribs, int uid, int gid)
 	// i=num/4;
 	// result=vdwriteseclog(inicio_nodos_i+i,&inode[i*4]);
 	write_inode(inode);
+	assigninode(num);
 
 	return(num);
 }
@@ -783,11 +779,7 @@ int search_inode(char *filename)
 	if(!inodes_loaded)
 	{
 		// Si no está en memoria, hay que leerlo del disco
-		char *buffer = malloc ((int)sizeof(SecBootPart));
-		for(i = 0; i < secboot.sec_tabla_nodos_i; i ++){
-				result=vdreadseclog(inicio_nodos_i+i,buffer);	////checar
-				memcpy(&inode[i*8], buffer, SECTORSIZE);
-		}
+		load_inodes();
 		inodes_loaded=1;
 	}
 	
@@ -807,25 +799,29 @@ int search_inode(char *filename)
 		return(i);		// La posición donde fue encontrado 
 }
 
-// Eliminar un nodo I de la tabla de nodos I, y establecerlo 
-// como disponible
+	// Eliminar un nodo I de la tabla de nodos I, y establecerlo 
+	// como disponible
 int remove_inode(int numinode)
 {
 	int i;
 
 	unsigned short temp[512]; // 1024 bytes
-// Desasignar los bloques directos en el mapa de bits que 
-// corresponden al archivo
+	// Desasignar los bloques directos en el mapa de bits que 
+	// corresponden al archivo
 
-//Antes de continuar debe cargarse en memoria el sector lógico 1 que es el sector de boot de la partición.
+	//Antes de continuar debe cargarse en memoria el sector lógico 1 que es el sector de boot de la partición.
 
-//Con los datos que están ahí, calcular:
-//El sector lógico donde empieza la tabla de nodos-i
-//También vamos a usar el número de sectores que tiene la tabla de nodos-i
+	//Con los datos que están ahí, calcular:
+	//El sector lógico donde empieza la tabla de nodos-i
+	//También vamos a usar el número de sectores que tiene la tabla de nodos-i
 
-//Asegurar que los sectores de la tabla nodos-I están en memoria, si no están en memoria, cargarlos.
-
-// Recorrer los apuntadores directos del nodo i
+	//Asegurar que los sectores de la tabla nodos-I están en memoria, si no están en memoria, cargarlos.
+	if(!inodes_loaded) {
+		//Si no estan cargados, cargar en memoria
+		load_inodes();
+		inodes_loaded = 1;
+	}
+	// Recorrer los apuntadores directos del nodo i
 	for(i=0;i<10;i++)
 		if(inode[numinode].direct_blocks[i]!=0) // Si es dif de cero
 										// Si está asignado
@@ -838,7 +834,7 @@ int remove_inode(int numinode)
 	if(inode[numinode].indirect!=0)
 	{
 		// Leer el bloque que contiene los apuntadores
-// a memoria
+		// a memoria
 		readblock(inode[numinode].indirect,(char *) temp);
 		// Recorrer todos los apuntadores del bloque para
 		// desasignarlos 
@@ -872,7 +868,7 @@ int nextfreeinode()
 		secboot_en_memoria=1;
 	}
 	inicio_nodos_i = secboot.sec_inicpart +secboot.sec_res; 	///checar
-//Usamos la información del sector de boot de la partición para 
+	//Usamos la información del sector de boot de la partición para 
 						//determinar en que sector inicia el 
 						// mapa de bits de nodos i 
 					
@@ -1051,7 +1047,7 @@ void write_inodemap()
 	vdwriteseclog(2, mybuf);
 }
 
-void read_inode() 
+void load_inodes() 
 {
 	unsigned short inicio_nodos_i;
 	char *buffer = malloc(SECTORSIZE); // cast a int porque ulong nos da 516???
