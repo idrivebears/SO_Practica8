@@ -3,14 +3,14 @@
 //Funciones del Sistema de Archivos
 int openfiles_inicializada = 0;
 OpenFile openfiles[24];
-Inode inode[24];					 ///checar
-SecBootPart secboot; 				 ///checar
-int secboot_en_memoria = 0;		     ///checar	
-char mapa_bits_nodos_i[3]; ///checar
-char mapa_bits_bloques[6*512]; ///6 *512 *8 = 24576
+Inode inode[24];					 	///checar
+SecBootPart secboot; 				 	///checar
+int secboot_en_memoria = 0;		     	///checar	
+char mapa_bits_nodos_i[3]; 				///checar
+char mapa_bits_bloques[6*512]; 			///6 *512 *8 = 24576
 int blocksmap_en_memoria = 0;
-int inodesmap_en_memoria   = 0;			 ///checar
-char *blockBuffer[1024];
+int inodesmap_en_memoria   = 0;			///checar
+char *block_buffer[1024];
 
 int vdopen(char *filename,unsigned short mode)
 {
@@ -434,7 +434,7 @@ int writeblock(int block,char *buffer)
 	// Escribir todos los sectores que corresponden al 
 	// bloque
 	for(i=0;i<secboot.sec_x_bloque;i++)
-		vdwriteseclog(inicio_area_datos+(block-1)*secboot.sec_x_bloque+i,blockBuffer[512*i]);
+		vdwriteseclog(inicio_area_datos+(block-1)*secboot.sec_x_bloque+i,block_buffer[512*i]);
 	return(1);	
 }
 
@@ -461,7 +461,7 @@ int readblock(int block,char *buffer)
 	inicio_area_datos=secboot.sec_inicpart+secboot.sec_res+secboot.sec_mapa_bits_area_nodos_i +secboot.sec_mapa_bits_bloques+secboot.sec_tabla_nodos_i;
 
 	for(i=0;i<secboot.sec_x_bloque;i++)
-		vdreadseclog(inicio_area_datos+(block-1)*secboot.sec_x_bloque+i,blockBuffer[512*i]);
+		vdreadseclog(inicio_area_datos+(block-1)*secboot.sec_x_bloque+i,block_buffer[512*i]);
 	return(1);	
 }
 

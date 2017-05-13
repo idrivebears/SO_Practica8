@@ -86,7 +86,7 @@ typedef struct {
 } Date;
 
 //GLOBALS
-#define TOTAL_NODOS_I 24   			 ///checar
+#define TOTAL_NODOS_I 24   			 ///checar 275213846
 #define TAMBLOQUE 1024
 int isinodefree(int inode);
 int setninode(int num, char *filename,unsigned short atribs, int uid, int gid);
