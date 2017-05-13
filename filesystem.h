@@ -84,21 +84,28 @@ typedef struct {
 	int min;
 	int sec;
 } Date;
-
+ 
 //GLOBALS
-#define TOTAL_NODOS_I 24   			 ///checar 275213846
-#define TAMBLOQUE 1024
-int isinodefree(int inode);
-int setninode(int num, char *filename,unsigned short atribs, int uid, int gid);
-int searchinode(char *filename);
-int removeinode(int numinode);
-int nextfreeinode();
-int assigninode(int inode);
-int unassigninode(int inode);
+#define TOTAL_INODES 24   			 ///checar
+#define BLOCKSIZE 1024
+#define SECTORSIZE 512
+
+int isinodefree(int inode);		//working
+int nextfreeinode();			//
+int assigninode(int inode);		//working
+int unassigninode(int inode);	//
+void load_inodemap();			//working
+void write_inodemap();			//working
+
+int set_inode(int num, char *filename,unsigned short atribs, int uid, int gid);
+int search_inode(char *filename);
+int remove_inode(int numinode);
+void write_inode();
+
 unsigned int datetoint(Date date);
 int inttodate(Date *date,unsigned int val);
 unsigned int currdatetimetoint();
-void writeInode(Inode inode[TOTAL_NODOS_I]);
+
 void readBlockMap();
 void writeBlockMap();
 
