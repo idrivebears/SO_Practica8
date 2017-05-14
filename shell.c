@@ -6,12 +6,22 @@
 #include <dirent.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include "filesystem.h"
 
 #define MAXLEN 80
 #define BUFFERSIZE 512
 
 void locateend(char *cmd);
 int executecmd(char *cmd);
+int isinvd(char *arg);
+int copyuu(char *arg1,char *arg2);
+int copyuv(char *arg1,char *arg2);
+int copyvu(char *arg1,char *arg2);
+int copyvv(char *arg1,char *arg2);
+int catv(char *arg1);
+int catu(char *arg1);
+int diru(char *arg1);
+int dirv(char *arg1);
 
 int main()
 {
@@ -258,7 +268,7 @@ int diru(char *arg1)
 int dirv(char *dir)
 {
 	VDDIR *dd;	
-	struct vddirent *entry;
+	vddirent *entry;
 
 	printf("Directorio del disco virtual\n");
 
