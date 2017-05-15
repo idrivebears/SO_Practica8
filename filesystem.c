@@ -720,6 +720,10 @@ int vdclosedir(VDDIR *dirdesc)
 int vdclose(int fd)
 {
 	// Ustedes la hacen
+
+	openfiles[fd].inuse = 0;
+	// Save to disk
+	return 1;
 }
 
 // **********************************************************
