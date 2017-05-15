@@ -6,12 +6,22 @@
 #include <dirent.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include "filesystem.h"
 
 #define MAXLEN 80
 #define BUFFERSIZE 512
 
 void locateend(char *cmd);
 int executecmd(char *cmd);
+int isinvd(char *arg);
+int copyuu(char *arg1,char *arg2);
+int copyuv(char *arg1,char *arg2);
+int copyvu(char *arg1,char *arg2);
+int copyvv(char *arg1,char *arg2);
+int typev(char *arg1);
+int typeu(char *arg1);
+int diru(char *arg1);
+int dirv(char *arg1);
 
 int main()
 {
@@ -79,9 +89,9 @@ int executecmd(char *linea)
 	if(strcmp(cmd,"type")==0)
 	{
 		if(isinvd(arg1))
-			catv(&arg1[5]);
+			typev(&arg1[5]);
 		else
-			catu(arg1);
+			typeu(arg1);
 	}
 
 	// comando dir
@@ -194,7 +204,7 @@ int copyvv(char *arg1,char *arg2)
 
 /* Despliega un archivo del disco virtual a pantalla */
 
-int catv(char *arg1)
+int typev(char *arg1)
 {
 	int sfile,dfile;
 	char buffer[BUFFERSIZE];
@@ -212,7 +222,7 @@ int catv(char *arg1)
 
 /* Despliega un archivo del sistema de archivos de UNIX a pantalla */
 
-int catu(char *arg1)
+int typeu(char *arg1)
 {
 	int sfile,dfile;
 	char buffer[BUFFERSIZE];
@@ -258,7 +268,7 @@ int diru(char *arg1)
 int dirv(char *dir)
 {
 	VDDIR *dd;	
-	struct vddirent *entry;
+	vddirent *entry;
 
 	printf("Directorio del disco virtual\n");
 

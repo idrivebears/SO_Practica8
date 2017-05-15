@@ -14,3 +14,5 @@ dumpseclog: dumpseclog.c
 	gcc -o dumpseclog dumpseclog.c filesystem.o vdisk.o
 user_fs: user_fs.c
 	gcc -o user_fs user_fs.c vdisk.o filesystem.o
+shell: shell.c
+	gcc -o shell shell.c filesystem.o vdisk.o
