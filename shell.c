@@ -177,16 +177,15 @@ int copyvu(char *arg1,char *arg2)
 	
 	sfile=vdopen(arg1,0);
 	dfile=creat(arg2,0640);
-	do {
-		ncars=vdread(sfile,buffer,BUFFERSIZE);
-		write(dfile,buffer,ncars);
-	} while(ncars==BUFFERSIZE);
+	/*do {
+		
+	} while(ncars==BUFFERSIZE);*/
+	ncars=vdread(sfile,buffer,BUFFERSIZE);
+	write(dfile,buffer,ncars);
 	vdclose(sfile);
 	close(dfile);
 	return(1);	
 }
-
-
 
 /* Copia un archivo del disco virtual a un archivo destino
    en el mismo disco virtual */
@@ -199,10 +198,11 @@ int copyvv(char *arg1,char *arg2)
 	
 	sfile=vdopen(arg1,0);
 	dfile=vdcreat(arg2,0640);
-	do {
-		ncars=vdread(sfile,buffer,BUFFERSIZE);
-		vdwrite(dfile,buffer,ncars);
-	} while(ncars==BUFFERSIZE);
+	/*do {
+		
+	} while(ncars==BUFFERSIZE);*/
+	ncars=vdread(sfile,buffer,BUFFERSIZE);
+	vdwrite(dfile,buffer,ncars);
 	vdclose(sfile);
 	vdclose(dfile);
 	return(1);		
