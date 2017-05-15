@@ -543,7 +543,7 @@ int writeblock(int block, char *buffer)
 	// Escribir todos los sectores que corresponden al 
 	// bloque
 	for(i=0;i<secboot.sec_x_bloque;i++)
-		vdwriteseclog(inicio_area_datos+(block-1)*secboot.sec_x_bloque+i,buffer[512*i]);
+		vdwriteseclog(inicio_area_datos+(block-1)*secboot.sec_x_bloque+i,&buffer[512*i]);
 	return(1);	
 }
 
@@ -570,7 +570,7 @@ int readblock(int block,char *buffer)
 	inicio_area_datos=secboot.sec_inicpart+secboot.sec_res+secboot.sec_mapa_bits_area_nodos_i +secboot.sec_mapa_bits_bloques+secboot.sec_tabla_nodos_i;
 	
 	for(i=0;i<secboot.sec_x_bloque;i++){
-		vdreadseclog(inicio_area_datos+(block-1)*secboot.sec_x_bloque+i,buffer[512*i]);
+		vdreadseclog(inicio_area_datos+(block-1)*secboot.sec_x_bloque+i,&buffer[512*i]);
 	}
 	return(1);	
 }
