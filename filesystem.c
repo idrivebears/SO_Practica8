@@ -15,7 +15,114 @@ char *block_buffer[1024];
 
 int vdopen(char *filename, unsigned short mode)
 {
-	// Les toca hacerla a ustedes
+	int numinode;
+	int i;
+
+	//ver si existe el archivo
+	numinode = search_inode(filename);
+	if(numinode == -1)
+		return -1;
+	
+	// Establecer el archivo como abierto
+	if(!openfiles_inicializada)
+	{
+		// La primera vez que abrimos un archivo, necesitamos
+		// inicializar la tabla de archivos abiertos
+		for(i=3;i<16;i++)
+		{
+			openfiles[i].inuse=0;
+			openfiles[i].currbloqueenmemoria=-1;
+		}
+		openfiles_inicializada=1;
+	}
+
+	// Buscar si hay lugar en la tabla de archivos abiertos
+	// Si no hay lugar, regresa -1, ver si ya esta abierto
+	
+	i=3;
+	while(openfiles[i].inuse && i<16)
+	{
+		if(inode[openfiles[i].inode].name == inode[numinode].name){
+			//printf("cnp %s == %s\n", inode[openfiles[i].inode].name, inode[numinode].name);
+			break;
+		}
+		i++;
+	}
+
+	if(i>=16)		// Llegamos al final y no hay lugar
+		return(-1);
+
+	openfiles[i].inuse=1;	// Poner el archivo en uso
+	openfiles[i].inode=numinode;  // Indicar que inodo es el
+							// del archivo abierto
+	openfiles[i].currpos=0; // Y la posición inicial
+// del archivo es 0
+	return i;
+}
+int vdread(int fd, char *buffer, int bytes)
+{
+	// Ustedes la hacen
+	int currblock;
+	int currinode;
+	int cont=0;
+	int sector;
+	int i;
+	int result;
+	unsigned short *currptr;
+	unsigned short inicio_nodos_i = secboot.sec_inicpart + secboot.sec_res; 	
+
+	char tmp[1024];
+	printf("size of buff %d, %ld\n", (int)sizeof(buffer), sizeof(tmp));
+	if(openfiles[fd].inuse == 0)
+		return -1;				// el archivo no esta abierto
+	
+	currinode=openfiles[fd].inode;
+
+	// Copiar byte por byte del buffer que recibo como 
+	// argumento al buffer del archivo
+	while(cont<bytes)
+	{
+		// Obtener la dirección de donde está el bloque que corresponde
+		// a la posición actual
+		currptr=currpostoptr(fd);
+		if(currptr==NULL)
+			return(-1);
+	
+		currblock=*currptr;
+		printf("currblock %d\n", currblock);
+		// Si el bloque está en blanco, dale uno
+		if(currblock==0)
+		{
+			// no hay nada que leer
+		}
+
+		// Si el bloque de la posición actual no está en memoria
+		// Lee el bloque al buffer del archivo
+		if(openfiles[fd].currbloqueenmemoria!=currblock)
+		{
+			printf("currbloqueenmemoria size of %ld\n", sizeof(openfiles[fd].buffer));
+			// Leer el bloque actual hacia el buffer que
+			// está en la tabla de archivos abiertos
+			readblock(currblock,openfiles[fd].buffer);			
+			// Actualizar en la tabla de archivps abiertos
+			// el bloque actual
+			openfiles[fd].currbloqueenmemoria=currblock;
+		}
+
+		// Copia el caracter al buffer
+		buffer[cont]=openfiles[fd].buffer[cont%BLOCKSIZE];
+		printf("buff %s\n",openfiles[fd].buffer);
+		// Incrementa posición actual del actual
+		//openfiles[fd].currpos++;
+
+		// Si la posición es mayor que el tamaño, modifica el tamaño
+		//if(openfiles[fd].currpos>inode[currinode].size)
+		//	inode[openfiles[fd].inode].size=openfiles[fd].currpos;
+
+		// Incrementa el contador
+		cont++;
+	}
+	return(1);
 }
 
 
@@ -170,7 +277,6 @@ int vdwrite(int fd, char *buffer, int bytes)
 	unsigned short inicio_nodos_i = secboot.sec_inicpart + secboot.sec_res; 	
 
 	// Si no está abierto, regresa error
-	printf("hola 4\n");
 	if(openfiles[fd].inuse==0)
 		return(-1);
 
@@ -178,7 +284,6 @@ int vdwrite(int fd, char *buffer, int bytes)
 
 	// Copiar byte por byte del buffer que recibo como 
 	// argumento al buffer del archivo
-	printf("hola 3\n");
 	while(cont<bytes)
 	{
 		// Obtener la dirección de donde está el bloque que corresponde
@@ -188,7 +293,6 @@ int vdwrite(int fd, char *buffer, int bytes)
 			return(-1);
 	
 		currblock=*currptr;
-
 		// Si el bloque está en blanco, dale uno
 		if(currblock==0)
 		{
@@ -229,10 +333,8 @@ int vdwrite(int fd, char *buffer, int bytes)
 		cont++;
 
 		// Si se llena el buffer, escríbelo
-		printf("hola 1. %d, %d\n", currblock, openfiles[fd].currpos);
 		if(openfiles[fd].currpos%BLOCKSIZE==0)
 		{
-			printf("hola kjl%d\n", currblock);
 			writeblock(currblock,openfiles[fd].buffer);
 		}
 	}
@@ -384,7 +486,7 @@ int unassignblock(int block)
 	if(!secboot_en_memoria)
 	{
 		// Si no está en memoria, cárgalo
-		char * buffer = malloc((int)sizeof(SecBootPart));
+		char buffer[512];
 		result=vdreadseclog(1,(char *) buffer);
 		memcpy(&secboot, buffer, SECTORSIZE);
 		secboot_en_memoria=1;
@@ -441,7 +543,7 @@ int writeblock(int block, char *buffer)
 	// Escribir todos los sectores que corresponden al 
 	// bloque
 	for(i=0;i<secboot.sec_x_bloque;i++)
-		vdwriteseclog(inicio_area_datos+(block-1)*secboot.sec_x_bloque+i,block_buffer[512*i]);
+		vdwriteseclog(inicio_area_datos+(block-1)*secboot.sec_x_bloque+i,buffer[512*i]);
 	return(1);	
 }
 
@@ -466,9 +568,10 @@ int readblock(int block,char *buffer)
 	//							sectores mapa de bits area de datos+	
 	//							sectores area nodos i (dr)
 	inicio_area_datos=secboot.sec_inicpart+secboot.sec_res+secboot.sec_mapa_bits_area_nodos_i +secboot.sec_mapa_bits_bloques+secboot.sec_tabla_nodos_i;
-
-	for(i=0;i<secboot.sec_x_bloque;i++)
-		vdreadseclog(inicio_area_datos+(block-1)*secboot.sec_x_bloque+i,block_buffer[512*i]);
+	
+	for(i=0;i<secboot.sec_x_bloque;i++){
+		vdreadseclog(inicio_area_datos+(block-1)*secboot.sec_x_bloque+i,buffer[512*i]);
+	}
 	return(1);	
 }
 
@@ -506,7 +609,7 @@ unsigned short *postoptr(int fd,int pos)
 	}
 	else
 		return(NULL);
-
+	
 	return(currptr);
 }
 
@@ -613,10 +716,6 @@ int vdclosedir(VDDIR *dirdesc)
 }
 
 
-int vdread(int fd, char *buffer, int bytes)
-{
-	// Ustedes la hacen
-}
 
 int vdclose(int fd)
 {
@@ -708,7 +807,14 @@ int set_inode(int num, char *filename,unsigned short atribs, int uid, int gid)
 	//Con los datos que están ahí, calcular:
 	//El sector lógico donde empieza la tabla de nodos-i
 	//También vamos a usar el número de sectores que tiene la tabla de nodos-i
-
+	if(!secboot_en_memoria)
+	{
+		// Si no está en memoria, cárgalo
+		char * buffer = malloc((int)sizeof(SecBootPart));
+		result=vdreadseclog(1,(char *) buffer);
+		memcpy(&secboot, buffer, SECTORSIZE);
+		secboot_en_memoria=1;
+	}
 
 	// Si la tabla de nodos-i no está en memoria, 
 	// hay que cargarla a memoria
@@ -769,7 +875,14 @@ int search_inode(char *filename)
 	//Con los datos que están ahí, calcular:
 	//El sector lógico donde empieza la tabla de nodos-i
 	//También vamos a usar el número de sectores que tiene la tabla de nodos-i
-
+	if(!secboot_en_memoria)
+	{
+		// Si no está en memoria, cárgalo
+		char buffer[512];
+		result=vdreadseclog(1,(char *) buffer);
+		memcpy(&secboot, buffer, SECTORSIZE);
+		secboot_en_memoria=1;
+	}
 	// Traer los sectores lógicos de los nodos I a memoria
 	if(!inodes_loaded)
 	{
@@ -785,8 +898,11 @@ int search_inode(char *filename)
 	// Recorrer la tabla de nodos I que ya tengo en memoria
 // desde el principio hasta el final buscando el archivo.
 	i=0;
+	
 	while(strcmp(inode[i].name,filename) && i<TOTAL_INODES)
+	{
 		i++;
+	}
 
 	if(i>= TOTAL_INODES)
 		return(-1);		// No se encuentra el archivo
@@ -1029,7 +1145,7 @@ unsigned int currdatetimetoint()
 
 void load_inodemap()
 {
-	char *mybuf = malloc(SECTORSIZE);
+	char mybuf[512];
 	vdreadseclog(2, mybuf);
 
 	memcpy(&inode_map, mybuf, sizeof(inode_map));
@@ -1037,7 +1153,7 @@ void load_inodemap()
 
 void write_inodemap()
 {
-	char *mybuf = malloc(SECTORSIZE);
+	char mybuf[512];
 	memcpy(mybuf, &inode_map, sizeof(mybuf));
 	vdwriteseclog(2, mybuf);
 }
@@ -1045,7 +1161,7 @@ void write_inodemap()
 void load_inodes() 
 {
 	unsigned short inicio_nodos_i;
-	char *buffer = malloc(SECTORSIZE); // cast a int porque ulong nos da 516???
+	char buffer[512]; // cast a int porque ulong nos da 516???
 	inicio_nodos_i = secboot.sec_inicpart + secboot.sec_res + secboot.sec_mapa_bits_area_nodos_i + secboot.sec_mapa_bits_bloques; 	
 	int i;
 	for(i = 0; i < secboot.sec_tabla_nodos_i; i++) {
@@ -1057,7 +1173,7 @@ void load_inodes()
 void write_inode()
 {
 	unsigned short inicio_nodos_i;
-	char *buffer = malloc (SECTORSIZE);
+	char buffer[512]; 
 	inicio_nodos_i = secboot.sec_inicpart + secboot.sec_res + secboot.sec_mapa_bits_area_nodos_i + secboot.sec_mapa_bits_bloques; 	
 	int i;
 	for(i = 0; i < secboot.sec_tabla_nodos_i; i++) {
@@ -1069,7 +1185,7 @@ void write_inode()
 
 void readBlockMap()
 {
-	char *buffer = malloc (SECTORSIZE);
+	char buffer[512]; 
 	unsigned short inicio_nodos_i= secboot.sec_inicpart+secboot.sec_res+secboot.sec_mapa_bits_area_nodos_i;
 	int i;
 	for(i = 0; i < secboot.sec_mapa_bits_bloques; i++) {
@@ -1080,7 +1196,7 @@ void readBlockMap()
 
 void writeBlockMap()
 {
-	char *buffer = malloc (SECTORSIZE);
+	char buffer[512]; 
 	unsigned short inicio_nodos_i= secboot.sec_inicpart+secboot.sec_res+secboot.sec_mapa_bits_area_nodos_i; 	
 	int i;
 	for(i = 0; i < secboot.sec_mapa_bits_bloques; i++) {

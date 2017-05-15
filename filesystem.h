@@ -5,6 +5,12 @@
 #include <string.h>
 #include "vdisk.h"
 
+#define TOTAL_INODES 24   			 ///checar
+#define BLOCKSIZE 1024
+#define SECTORSIZE 512
+#define READONLY 0
+#define READWRITE 1
+
 typedef struct  {
 	int inuse;		// 0 cerrado, 1 abierto
 	unsigned short inode;
@@ -86,9 +92,7 @@ typedef struct {
 } Date;
  
 //GLOBALS
-#define TOTAL_INODES 24   			 ///checar
-#define BLOCKSIZE 1024
-#define SECTORSIZE 512
+
 
 int isinodefree(int inode);		//working
 int nextfreeinode();			//working
@@ -111,10 +115,12 @@ void readBlockMap();
 void writeBlockMap();
 
 int vdopen(char *filename,unsigned short mode);
-int vdcreat(char *filename,unsigned short perms);
+int vdcreat(char *filename,unsigned short perms);		//working
 int vdunlink(char *filename);
 int vdseek(int fd, int offset, int whence);
-int vdwrite(int fd, char *buffer, int bytes);
+int vdwrite(int fd, char *buffer, int bytes);			//working
+int vdread(int fd, char *buffer, int bytes);
+int vdclose(int fd);
 int isblockfree(int block);
 int nextfreeblock();
 int assignblock(int block);
@@ -126,9 +132,7 @@ unsigned short *currpostoptr(int fd);
 VDDIR *vdopendir(char *path);
 vddirent *vdreaddir(VDDIR *dirdesc);
 int vdclosedir(VDDIR *dirdesc);
-int vdread(int fd, char *buffer, int bytes);
 
-int vdclose(int fd);
 
 
 int vdwriteseclog(int seclog, char *buffer);
