@@ -1,4 +1,4 @@
-all: filesystem vfdisk vdformat user_fs run_format
+all: filesystem vfdisk vdformat user_fs shell run_format
 run_format:
 	rm disco0.vd
 	./createvd 0

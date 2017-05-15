@@ -27,6 +27,8 @@ int main()
 {
 	char linea[MAXLEN];
 	int result=1;
+	printf("%d\n", isinvd("//user_fs.c"));
+	printf("%d\n", isinvd("user_fs.c"));
 	while(result)
 	{
 		printf("vshell > ");
@@ -109,12 +111,11 @@ int executecmd(char *linea)
 
 int isinvd(char *arg)
 {
-	if(strncmp(arg,"/vfs/",5)!=0)
-		return(0);
-	else
-		return(1);
+    if (strncmp(arg, "//", 2) != 0)
+		return (1);
+    else
+		return (0);
 }
-
 
 /* Copia un archivo del sistema de archivos de UNIX a un archivo destino
    en el mismo sistema de archivos de UNIX */

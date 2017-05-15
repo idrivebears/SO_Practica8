@@ -89,7 +89,7 @@ int vdread(int fd, char *buffer, int bytes)
 			return(-1);
 	
 		currblock=*currptr;
-		printf("currblock %d\n", currblock);
+		//printf("currblock %d\n", currblock);
 		// Si el bloque está en blanco, dale uno
 		if(currblock==0)
 		{
@@ -100,7 +100,7 @@ int vdread(int fd, char *buffer, int bytes)
 		// Lee el bloque al buffer del archivo
 		if(openfiles[fd].currbloqueenmemoria!=currblock)
 		{
-			printf("currbloqueenmemoria size of %ld\n", sizeof(openfiles[fd].buffer));
+			//printf("currbloqueenmemoria size of %ld\n", sizeof(openfiles[fd].buffer));
 			// Leer el bloque actual hacia el buffer que
 			// está en la tabla de archivos abiertos
 			readblock(currblock,openfiles[fd].buffer);			
@@ -111,7 +111,7 @@ int vdread(int fd, char *buffer, int bytes)
 
 		// Copia el caracter al buffer
 		buffer[cont]=openfiles[fd].buffer[cont%BLOCKSIZE];
-		printf("buff %s\n",openfiles[fd].buffer);
+		//printf("buff %s\n",openfiles[fd].buffer);
 		// Incrementa posición actual del actual
 		//openfiles[fd].currpos++;
 
