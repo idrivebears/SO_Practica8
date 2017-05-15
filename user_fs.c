@@ -13,9 +13,9 @@ int main(int argc,char *argv[])
 
     printf("size %d\n", fid);
     
-    int a = vdwrite(fid, mymessage, 1024);
+    int a = vdwrite(fid, mymessage, 48);
     mymessage = "2Este es un mensaje para todos los ninos de hoy.";
-    a = vdwrite(fid, mymessage, 1024);
+    a = vdwrite(fid, mymessage, 48);
     
     
     char buffer[48];

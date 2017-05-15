@@ -72,7 +72,7 @@ int vdread(int fd, char *buffer, int bytes)
 	unsigned short inicio_nodos_i = secboot.sec_inicpart + secboot.sec_res; 	
 
 	char tmp[1024];
-	printf("size of buff %d, %ld\n", (int)sizeof(buffer), sizeof(tmp));
+	//printf("size of buff %d, %ld\n", (int)sizeof(buffer), sizeof(tmp));
 	if(openfiles[fd].inuse == 0)
 		return -1;				// el archivo no esta abierto
 	
@@ -122,7 +122,7 @@ int vdread(int fd, char *buffer, int bytes)
 		// Incrementa el contador
 		cont++;
 	}
-	return(1);
+	return(cont);
 }
 
 
@@ -338,6 +338,8 @@ int vdwrite(int fd, char *buffer, int bytes)
 			writeblock(currblock,openfiles[fd].buffer);
 		}
 	}
+
+	writeblock(currblock, openfiles[fd].buffer);
 	return(cont);
 } 
 
@@ -715,15 +717,19 @@ int vdclosedir(VDDIR *dirdesc)
 	(*dirdesc)=-1;
 }
 
-
-
 int vdclose(int fd)
 {
-	// Ustedes la hacen
-
-	openfiles[fd].inuse = 0;
+	// Limpiar los valores del openfile
+	if(openfiles[fd].inuse == 1) {
+		openfiles[fd].inuse = 0;
+		openfiles[fd].currpos = 0;
+		openfiles[fd].currbloqueenmemoria = 0;
+		openfiles[fd].inode = 0;
+		memset(openfiles[fd].buffer, 0x00, 1024);
+		return 1;
+	}
 	// Save to disk
-	return 1;
+	return 0;
 }
 
 // **********************************************************

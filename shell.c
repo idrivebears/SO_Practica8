@@ -72,37 +72,32 @@ int executecmd(char *linea)
 			fprintf(stderr,"Error en los argumentos\n");
 			return(1);
 		}
-		if(!isinvd(arg1) && !isinvd(arg2))
-			copyuu(arg1,arg2);
-
-		else if(!isinvd(arg1) && isinvd(arg2))
-			copyuv(arg1,&arg2[5]);
-
-		else if(isinvd(arg1) && !isinvd(arg2))
-			copyvu(&arg1[5],arg2);
-
-		else if(isinvd(arg1) && isinvd(arg2))
-			copyvv(&arg1[5],&arg2[5]);
-			
-		
+		if (!isinvd(arg1) && !isinvd(arg2))
+		    copyuu(&arg1[2], &arg2[2]);
+		else if (!isinvd(arg1) && isinvd(arg2))
+		    copyuv(&arg1[2], arg2);
+		else if (isinvd(arg1) && !isinvd(arg2))
+		    copyvu(arg1, &arg2[2]);
+		else if (isinvd(arg1) && isinvd(arg2))
+		    copyvv(arg1, arg2);
 	}
 
 	// comando "type"
 	if(strcmp(cmd,"type")==0)
 	{
-		if(isinvd(arg1))
-			typev(&arg1[5]);
-		else
-			typeu(arg1);
+	    if (isinvd(arg1))
+			typev(arg1);
+	    else
+			typeu(&arg1[2]);
 	}
 
 	// comando dir
 	if(strcmp(cmd,"dir")==0)
 	{
 		if(arg1==NULL)
-			diru(arg1);
+			dirv(&arg1[2]);
 		else if(!isinvd(arg1))
-			dirv(&arg1[5]);
+			diru(arg1);
 	}
 }
 
@@ -262,6 +257,7 @@ int diru(char *arg1)
 		printf("%s\n",entry->d_name);
 
 	closedir(dd);	
+	return 1;
 }
 
 /* Muestra el directorio en el sistema de archivos en el disco virtual */
@@ -283,6 +279,7 @@ int dirv(char *dir)
 	while((entry=vdreaddir(dd))!=NULL)
 		printf("%s\n",entry->d_name);
 
-	vdclosedir(dd);	
+	vdclosedir(dd);
+	return 1;
 }
 
