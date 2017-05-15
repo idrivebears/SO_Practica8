@@ -22,6 +22,8 @@ int typev(char *arg1);
 int typeu(char *arg1);
 int diru(char *arg1);
 int dirv(char *arg1);
+int deletev(char *dir);
+int deleteu(char *dir);
 
 int main()
 {
@@ -99,6 +101,14 @@ int executecmd(char *linea)
 		else if(!isinvd(arg1))
 			diru(arg1);
 	}
+
+	if(strcmp(cmd,"delete") == 0) 
+	{
+		if(isinvd(arg1))
+			deletev(arg1);
+		else
+			deleteu(&arg1[2]);
+	}
 }
 
 /* Regresa verdadero si el nombre del archivo no comienza con // y por lo 
@@ -149,6 +159,7 @@ int copyuv(char *arg1,char *arg2)
 		ncars=read(sfile,buffer,BUFFERSIZE);
 		vdwrite(dfile,buffer,ncars);
 	} while(ncars==BUFFERSIZE);
+	
 	close(sfile);
 	vdclose(dfile);
 	return(1);	
@@ -207,10 +218,8 @@ int typev(char *arg1)
 	int ncars;
 	
 	sfile=vdopen(arg1,0);
-	do {
-		ncars=vdread(sfile,buffer,BUFFERSIZE);
-		write(1,buffer,ncars);  // Escribe en el archivo de salida estandard
-	} while(ncars==BUFFERSIZE);
+	ncars=vdread(sfile,buffer,BUFFERSIZE);
+	write(1,buffer,ncars);  // Escribe en el archivo de salida estandard
 	vdclose(sfile);
 	return(1);		
 }
@@ -281,5 +290,17 @@ int dirv(char *dir)
 
 	vdclosedir(dd);
 	return 1;
+}
+
+int deletev(char *dir) 
+{
+	vdunlink(dir);
+	printf("%s borrado.v\n", dir);
+}
+
+int deleteu(char *dir) 
+{
+	unlink(dir);
+	printf("%s borrado.u\n", dir);
 }
 
